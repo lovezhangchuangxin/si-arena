@@ -18,6 +18,7 @@
     "@si-arena/game-royale": "workspace:*",
     "@si-arena/game-snake": "workspace:*",
     "@si-arena/game-tank": "workspace:*",
+    "@si-arena/game-tetris": "workspace:*",
     "@si-arena/protocol": "workspace:*",
     "@si-arena/runner": "workspace:*",
     "drizzle-orm": "catalog:",

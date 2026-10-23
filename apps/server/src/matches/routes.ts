@@ -6,8 +6,10 @@ import { matchParticipants, matches } from "@si-arena/db";
 import { sendError } from "../http/errors";
 import { parsePagination } from "../http/pagination";
 import { gameCatalog } from "../games";
+import { isSoloGame } from "@si-arena/protocol";
 import {
   createDuel,
+  createSoloRun,
   ENTRY_NOT_RUNNABLE_MESSAGES,
   entryNotRunnableReason,
   loadGameEntry,
@@ -85,17 +87,24 @@ export function matchesRoutes(db: NodePgDatabase, replaysDir?: string): FastifyP
           return sendError(reply, 409, problem, ENTRY_NOT_RUNNABLE_MESSAGES[problem]);
 
         try {
-          const row = await createDuel(db, game, {
-            initiator: {
-              userId: session.userId,
-              username: session.username,
-              official: session.official,
-              boss: false,
-            },
-            initiatorRating: Number(entry.rating),
-            idempotencyKey,
-            intent,
-          });
+          const initiator = {
+            userId: session.userId,
+            username: session.username,
+            official: session.official,
+            boss: false,
+          };
+          const row = isSoloGame(game)
+            ? intent.type === "matchmaking"
+              ? await createSoloRun(db, game, { initiator, idempotencyKey })
+              : null
+            : await createDuel(db, game, {
+                initiator,
+                initiatorRating: Number(entry.rating),
+                idempotencyKey,
+                intent,
+              });
+          if (row === null)
+            return sendError(reply, 400, "VALIDATION_ERROR", "单人游戏不接收对手或 Boss 参数");
           return reply.status(201).send(await buildMatchDetail(db, row));
         } catch (error) {
           if (error instanceof MatchRequestError)

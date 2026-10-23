@@ -29,11 +29,14 @@ export const gameEntries = pgTable(
     losses: integer("losses").notNull().default(0),
     /** Arena games only: the sum of finishing ranks, for the average placement. */
     placementTotal: integer("placement_total").notNull().default(0),
+    /** Solo games only: the best score across finished runs. */
+    bestScore: integer("best_score").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex("game_entries_game_user_key").on(table.gameId, table.userId),
     index("game_entries_game_rating_idx").on(table.gameId, desc(table.rating), table.userId),
+    index("game_entries_game_best_score_idx").on(table.gameId, desc(table.bestScore), table.userId),
   ],
 );

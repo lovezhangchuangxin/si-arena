@@ -8,6 +8,7 @@ import * as royale from "@si-arena/game-royale/game";
 import * as snake from "@si-arena/game-snake/game";
 import * as bomber from "@si-arena/game-bomber/game";
 import * as tank from "@si-arena/game-tank/game";
+import * as tetris from "@si-arena/game-tetris/game";
 
 // Trusted build registrations: adding a game does not change the archive builder.
 export const devkitGames = [
@@ -65,5 +66,16 @@ export const devkitGames = [
     developmentFiles: tank.developmentFiles,
     officialBotUrl: tank.officialBotUrl,
     sdkSource: tank.TANK_SDK_SOURCE,
+  },
+  {
+    game: tetris.tetrisGame,
+    packageName: "@si-arena/game-tetris",
+    directory: "games/tetris",
+    gameExport: "tetrisGame",
+    sdkSourceExport: "TETRIS_SDK_SOURCE",
+    sdkInputType: "TetrisTickInput",
+    developmentFiles: tetris.developmentFiles,
+    officialBotUrl: tetris.officialBotUrl,
+    sdkSource: tetris.TETRIS_SDK_SOURCE,
   },
 ];

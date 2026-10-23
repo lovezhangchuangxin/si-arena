@@ -29,6 +29,7 @@
     "../../games/royale/tests/**",
     "../../games/snake/tests/**",
     "../../games/bomber/tests/**",
-    "../../games/tank/tests/**"
+    "../../games/tank/tests/**",
+    "../../games/tetris/tests/**"
   ]
 }

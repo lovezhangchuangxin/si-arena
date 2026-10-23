@@ -295,6 +295,9 @@ importers:
       '@si-arena/game-tank':
         specifier: workspace:*
         version: link:games/tank
+      '@si-arena/game-tetris':
+        specifier: workspace:*
+        version: link:games/tetris
       '@si-arena/protocol':
         specifier: workspace:*
         version: link:packages/protocol
@@ -370,6 +373,9 @@ importers:
       '@si-arena/game-tank':
         specifier: workspace:*
         version: link:../../games/tank
+      '@si-arena/game-tetris':
+        specifier: workspace:*
+        version: link:../../games/tetris
       '@si-arena/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
@@ -413,6 +419,9 @@ importers:
       '@si-arena/game-tank':
         specifier: workspace:*
         version: link:../../games/tank
+      '@si-arena/game-tetris':
+        specifier: workspace:*
+        version: link:../../games/tetris
       '@si-arena/player':
         specifier: workspace:*
         version: link:../../packages/player
@@ -468,6 +477,9 @@ importers:
       '@si-arena/game-tank':
         specifier: workspace:*
         version: link:../../games/tank
+      '@si-arena/game-tetris':
+        specifier: workspace:*
+        version: link:../../games/tetris
       '@si-arena/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
@@ -531,6 +543,19 @@ importers:
         version: link:../../packages/sandbox
 
   games/tank:
+    dependencies:
+      '@si-arena/protocol':
+        specifier: workspace:*
+        version: link:../../packages/protocol
+    devDependencies:
+      '@si-arena/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@si-arena/sandbox':
+        specifier: workspace:*
+        version: link:../../packages/sandbox
+
+  games/tetris:
     dependencies:
       '@si-arena/protocol':
         specifier: workspace:*

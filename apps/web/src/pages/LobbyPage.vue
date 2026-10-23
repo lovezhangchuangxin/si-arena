@@ -5,8 +5,10 @@ import { parseHistory, parseLeaderboard } from "../api/contracts";
 import { session } from "../auth/session";
 import { useApiResource } from "../composables/useApiResource";
 import { duelGames, useCatalog } from "../games/catalog";
+import { isSoloGame } from "@si-arena/protocol";
 import ArenaModeCard from "../components/lobby/ArenaModeCard.vue";
 import DuelModeCard from "../components/lobby/DuelModeCard.vue";
+import SoloModeCard from "../components/lobby/SoloModeCard.vue";
 import GamePreview from "../components/GamePreview.vue";
 import MatchList from "../components/MatchList.vue";
 import AppButton from "../components/ui/AppButton.vue";
@@ -90,6 +92,7 @@ const recent = useApiResource(
       <div v-else class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-5">
         <template v-for="game in games" :key="game.id">
           <ArenaModeCard v-if="game.arena" :game="game" />
+          <SoloModeCard v-else-if="isSoloGame(game)" :game="game" />
           <DuelModeCard v-else :game="game" />
         </template>
       </div>

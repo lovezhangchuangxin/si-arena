@@ -39,7 +39,7 @@ export async function runClaimedMatch(
     .from(matchParticipants)
     .where(eq(matchParticipants.matchId, claim.id))
     .orderBy(matchParticipants.slot);
-  if (seats.length < 2 || seats.some((seat, index) => seat.slot !== index)) {
+  if (seats.length < 1 || seats.some((seat, index) => seat.slot !== index)) {
     await failMatch(ctx.db, {
       matchId: claim.id,
       executionId: claim.executionId,

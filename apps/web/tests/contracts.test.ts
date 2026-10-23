@@ -53,6 +53,7 @@ test("entry responses validate active initiated matches independently from code 
       draws: 0,
       losses: 0,
       placementTotal: 0,
+      bestScore: 0,
     },
     boss: { available: true, attempts: 2, wins: 1 },
     code: null,
@@ -99,6 +100,7 @@ test("match kinds, boss flags, arena ratings and arena status are validated stri
     draws: 0,
     losses: 1,
     placementTotal: 3,
+    bestScore: 0,
   };
   expect(
     parseLeaderboard({ page: 1, limit: 20, total: 1, players: [row] }).players[0]!.placementTotal,

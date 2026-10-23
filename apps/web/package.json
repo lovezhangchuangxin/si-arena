@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --import tsx ../../scripts/wait-for-workspace-deps.ts && vite --host 127.0.0.1",
+    "dev": "node --import tsx ../../scripts/wait-for-workspace-deps.ts && vite",
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview --host 127.0.0.1",
@@ -19,6 +19,7 @@
     "@si-arena/game-royale": "workspace:*",
     "@si-arena/game-snake": "workspace:*",
     "@si-arena/game-tank": "workspace:*",
+    "@si-arena/game-tetris": "workspace:*",
     "@si-arena/player": "workspace:*",
     "@si-arena/protocol": "workspace:*",
     "vue": "catalog:",

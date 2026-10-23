@@ -102,6 +102,18 @@ async function uploadOfficialBot(token: string): Promise<void> {
   expect(res.statusCode).toBe(200);
 }
 
+async function uploadTetrisBot(token: string): Promise<void> {
+  const tetris = registeredGames.find((game) => game.entry.id === "tetris");
+  if (!tetris) throw new Error("tetris game is not registered");
+  const source = await readFile(tetris.officialBotUrl, "utf8");
+  const res = await call("PUT", "/api/games/tetris/me/code", {
+    body: source,
+    token,
+    headers: { "content-type": "text/plain" },
+  });
+  expect(res.statusCode).toBe(200);
+}
+
 beforeAll(async () => {
   admin = new Client({ connectionString: databaseUrl });
   await admin.connect();
@@ -623,6 +635,53 @@ dbTest("leaderboard ranks entries with ties and pagination", async () => {
 
   const missing = await call("GET", "/api/games/nothing/leaderboard");
   expect(missing.statusCode).toBe(404);
+});
+
+dbTest("solo runs are created bare and ranked by best score", async () => {
+  const user = await registerUser();
+  await uploadTetrisBot(user.token);
+
+  // Solo games reject opponent and boss intents outright.
+  const challenged = await call("POST", "/api/games/tetris/matches", {
+    token: user.token,
+    body: { opponentId: user.id },
+    headers: { "idempotency-key": "solo-challenge" },
+  });
+  expect(challenged.statusCode).toBe(400);
+  expect(challenged.json().code).toBe("VALIDATION_ERROR");
+  const boss = await call("POST", "/api/games/tetris/matches", {
+    token: user.token,
+    body: { boss: true },
+    headers: { "idempotency-key": "solo-boss" },
+  });
+  expect(boss.statusCode).toBe(400);
+
+  // A bare matchmaking intent creates the single-seat solo run.
+  const created = await call("POST", "/api/games/tetris/matches", {
+    token: user.token,
+    headers: { "idempotency-key": "solo-create" },
+  });
+  expect(created.statusCode).toBe(201);
+  const body = created.json();
+  expect(body.kind).toBe("solo");
+  expect(body.participants).toHaveLength(1);
+  expect(body.participants[0]).toMatchObject({ userId: user.id, slot: 0 });
+
+  // Idempotent replays return the very same run.
+  const replay = await call("POST", "/api/games/tetris/matches", {
+    token: user.token,
+    headers: { "idempotency-key": "solo-create" },
+  });
+  expect(replay.statusCode).toBe(200);
+  expect(replay.json().id).toBe(body.id);
+
+  // The solo board orders by best score; fresh entries sit at 0 with a rank.
+  const board = await call("GET", "/api/games/tetris/leaderboard");
+  expect(board.statusCode).toBe(200);
+  const players = board.json().players;
+  expect(players.some((player: { userId: string }) => player.userId === user.id)).toBe(true);
+  const mine = players.find((player: { userId: string }) => player.userId === user.id);
+  expect(mine).toMatchObject({ bestScore: 0, rating: 1000 });
 });
 
 dbTest("my matches lists participations newest first", async () => {

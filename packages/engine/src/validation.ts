@@ -87,7 +87,7 @@ export function gameHeader<
   text(manifest.id, "game.id");
   text(manifest.release, "game.release");
   integer(manifest.botProtocolVersion, 1, Number.MAX_SAFE_INTEGER, "botProtocolVersion");
-  integer(manifest.minPlayers, 2, Number.MAX_SAFE_INTEGER, "minPlayers");
+  integer(manifest.minPlayers, 1, Number.MAX_SAFE_INTEGER, "minPlayers");
   integer(manifest.maxPlayers, manifest.minPlayers, Number.MAX_SAFE_INTEGER, "maxPlayers");
   integer(manifest.maxTicks, 1, Number.MAX_SAFE_INTEGER, "maxTicks");
   assertGameResourceLimits(resolveResourceLimits(manifest.resolvedLimits), manifest.maxPlayers);

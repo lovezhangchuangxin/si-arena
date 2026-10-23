@@ -37,6 +37,17 @@ function rankByUserId(result: GameResult): Map<string, number> {
   return ranks;
 }
 
+function scoreByUserId(result: GameResult): Map<string, number> {
+  const scores = new Map<string, number>();
+  for (const player of result.players) {
+    if (typeof player.score !== "number" || !Number.isSafeInteger(player.score)) {
+      throw new Error("Match result is missing an integral score for every player");
+    }
+    scores.set(player.id, player.score);
+  }
+  return scores;
+}
+
 /**
  * Publishes a finished match: one transaction verifies execution rights, settles
  * by match kind (Elo for ranked games, pairwise Elo for arena games, ranks only
@@ -74,14 +85,16 @@ export async function settleMatch(
       .where(eq(matchParticipants.matchId, input.matchId))
       .orderBy(asc(matchParticipants.slot));
     const ranks = rankByUserId(input.result);
+    const scores = scoreByUserId(input.result);
     for (const seat of seats) {
       if (!ranks.has(seat.userId)) throw new Error("Match result is missing a participant rank");
     }
-    if (match.kind === "ranked") await settleRanked(tx, match.gameId, seats, ranks);
+    if (match.kind === "ranked") await settleRanked(tx, match.gameId, seats, ranks, scores);
     else if (match.kind === "arena") {
       if (input.arena === undefined) throw new Error("Arena match settled without arena settings");
-      await settleArena(tx, match.gameId, seats, ranks);
-    } else await recordRanks(tx, seats, ranks);
+      await settleArena(tx, match.gameId, seats, ranks, scores);
+    } else if (match.kind === "solo") await settleSolo(tx, match.gameId, seats, ranks, scores);
+    else await recordRanks(tx, seats, ranks, scores);
 
     await store.publish(input.candidatePath, input.matchId);
     await tx
@@ -125,12 +138,17 @@ async function lockEntries(tx: Transaction, gameId: string, userIds: string[]) {
   return byUser;
 }
 
-/** Practice and boss games: ranks only, nobody's standing changes. */
-async function recordRanks(tx: Transaction, seats: Seat[], ranks: Map<string, number>) {
+/** Practice and boss games: ranks and scores only, nobody's standing changes. */
+async function recordRanks(
+  tx: Transaction,
+  seats: Seat[],
+  ranks: Map<string, number>,
+  scores: Map<string, number>,
+) {
   for (const seat of seats)
     await tx
       .update(matchParticipants)
-      .set({ rank: ranks.get(seat.userId)! })
+      .set({ rank: ranks.get(seat.userId)!, score: scores.get(seat.userId) ?? 0 })
       .where(eq(matchParticipants.id, seat.id));
 }
 
@@ -140,6 +158,7 @@ async function settleRanked(
   gameId: string,
   seats: Seat[],
   ranks: Map<string, number>,
+  scoresByUser: Map<string, number>,
 ) {
   if (seats.length !== 2) throw new Error("Ranked match must settle exactly two participants");
   if (seats.some((seat) => seat.officialSnapshot || seat.bossSnapshot))
@@ -176,6 +195,7 @@ async function settleRanked(
       .update(matchParticipants)
       .set({
         rank: ranks.get(seat.userId)!,
+        score: scoresByUser.get(seat.userId) ?? 0,
         ratingBefore: formatRating(ratingsBefore[index]!),
         ratingAfter: formatRating(ratingAfter),
       })
@@ -192,6 +212,7 @@ async function settleArena(
   gameId: string,
   seats: Seat[],
   ranks: Map<string, number>,
+  scores: Map<string, number>,
 ) {
   const scored = seats.filter((seat) => !seat.officialSnapshot && !seat.bossSnapshot);
   if (scored.length > 0) {
@@ -221,6 +242,7 @@ async function settleArena(
         .update(matchParticipants)
         .set({
           rank,
+          score: scores.get(seat.userId) ?? 0,
           ratingBefore: formatRating(ratings[index]!),
           ratingAfter: formatRating(ratingAfter),
         })
@@ -231,7 +253,37 @@ async function settleArena(
     tx,
     seats.filter((seat) => seat.officialSnapshot || seat.bossSnapshot),
     ranks,
+    scores,
   );
+}
+
+/** Solo runs: one seat, the entry keeps its best score and run count. */
+async function settleSolo(
+  tx: Transaction,
+  gameId: string,
+  seats: Seat[],
+  ranks: Map<string, number>,
+  scores: Map<string, number>,
+) {
+  if (seats.length !== 1) throw new Error("Solo match must settle exactly one participant");
+  if (seats[0]!.officialSnapshot || seats[0]!.bossSnapshot)
+    throw new Error("Solo match cannot seat the official bot or the boss");
+  const seat = seats[0]!;
+  const score = scores.get(seat.userId) ?? 0;
+  const entryByUser = await lockEntries(tx, gameId, [seat.userId]);
+  const entry = entryByUser.get(seat.userId)!;
+  await tx
+    .update(gameEntries)
+    .set({
+      bestScore: Math.max(entry.bestScore, score),
+      matchesPlayed: entry.matchesPlayed + 1,
+      updatedAt: sql`now()`,
+    })
+    .where(eq(gameEntries.id, entry.id));
+  await tx
+    .update(matchParticipants)
+    .set({ rank: ranks.get(seat.userId)!, score })
+    .where(eq(matchParticipants.id, seat.id));
 }
 
 /**

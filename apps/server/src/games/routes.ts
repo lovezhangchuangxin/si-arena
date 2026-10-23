@@ -7,6 +7,7 @@ import {
   type CannotMatchReason,
   type GameCatalogEntry,
   type GameMeResponse,
+  isSoloGame,
 } from "@si-arena/protocol";
 import { requireSession } from "../auth/session";
 import { gameEntries, matchParticipants, matches, users } from "@si-arena/db";
@@ -63,23 +64,21 @@ async function bossRecord(
   };
 }
 
-/** Same ordering key as the leaderboard: rating, with ties sharing a rank. */
+/** Same ordering key as the leaderboard: rating, or best score for solo games. */
 async function leaderboardRank(
   db: NodePgDatabase,
   game: GameCatalogEntry,
-  entry: { rating: string },
+  entry: { rating: string; bestScore: number },
 ): Promise<number> {
+  const ahead = isSoloGame(game)
+    ? sql`${gameEntries.bestScore} > ${entry.bestScore}`
+    : sql`${gameEntries.rating} > ${entry.rating}`;
   const [row] = await db
     .select({ count: sql<string>`count(*)` })
     .from(gameEntries)
     .innerJoin(users, eq(gameEntries.userId, users.id))
     .where(
-      and(
-        eq(gameEntries.gameId, game.id),
-        eq(users.official, false),
-        eq(users.boss, false),
-        sql`${gameEntries.rating} > ${entry.rating}`,
-      ),
+      and(eq(gameEntries.gameId, game.id), eq(users.official, false), eq(users.boss, false), ahead),
     );
   return Number(row?.count ?? 0) + 1;
 }
@@ -141,6 +140,7 @@ export function gamesRoutes(db: NodePgDatabase): FastifyPluginAsync {
           rank:
             entry === undefined || session.official ? null : await leaderboardRank(db, game, entry),
           placementTotal: entry?.placementTotal ?? 0,
+          bestScore: entry?.bestScore ?? 0,
           rating: entry === undefined ? 1000 : Number(entry.rating),
           matchesPlayed: entry?.matchesPlayed ?? 0,
           wins: entry?.wins ?? 0,
@@ -248,11 +248,15 @@ export function gamesRoutes(db: NodePgDatabase): FastifyPluginAsync {
           eq(users.boss, false),
         );
         const arena = game.arena;
+        const solo = isSoloGame(game);
         // Arena games additionally break display order by the tie-break game's
-        // rating; ranks themselves share on equal internal ratings.
+        // rating; solo games order by the best run score; ranks share on equal keys.
         const order =
           arena === undefined
-            ? [desc(gameEntries.rating), asc(gameEntries.userId)]
+            ? [
+                ...(solo ? [desc(gameEntries.bestScore)] : [desc(gameEntries.rating)]),
+                asc(gameEntries.userId),
+              ]
             : [
                 desc(gameEntries.rating),
                 sql`coalesce(${tieBreakEntry.rating}, 1000) desc`,
@@ -265,7 +269,9 @@ export function gamesRoutes(db: NodePgDatabase): FastifyPluginAsync {
           .where(ranked);
         const rows = await db
           .select({
-            rank: sql<string>`rank() over (order by ${gameEntries.rating} desc)`,
+            rank: sql<string>`rank() over (order by ${
+              solo ? gameEntries.bestScore : gameEntries.rating
+            } desc)`,
             userId: gameEntries.userId,
             username: users.normalizedUsername,
             official: users.official,
@@ -275,6 +281,7 @@ export function gamesRoutes(db: NodePgDatabase): FastifyPluginAsync {
             draws: gameEntries.draws,
             losses: gameEntries.losses,
             placementTotal: gameEntries.placementTotal,
+            bestScore: gameEntries.bestScore,
           })
           .from(gameEntries)
           .innerJoin(users, eq(gameEntries.userId, users.id))
@@ -304,6 +311,7 @@ export function gamesRoutes(db: NodePgDatabase): FastifyPluginAsync {
             draws: row.draws,
             losses: row.losses,
             placementTotal: row.placementTotal,
+            bestScore: row.bestScore,
           })),
         };
       },

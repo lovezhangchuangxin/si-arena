@@ -22,6 +22,13 @@ import {
 } from "@si-arena/game-bomber/renderer";
 import { tankGame } from "@si-arena/game-tank/game";
 import { drawTankBoard, tankHighlights, tankPlayerSummaries } from "@si-arena/game-tank/renderer";
+import { tetrisGame } from "@si-arena/game-tetris/game";
+import {
+  drawTetrisBoard,
+  tetrisHighlights,
+  tetrisPlayerSummaries,
+  TETRIS_ASPECT_RATIO,
+} from "@si-arena/game-tetris/renderer";
 
 type ReplayGameOptions<
   State extends { tick: number },
@@ -84,6 +91,10 @@ export const replayGames = [
   boardReplay(tankGame, drawTankBoard, tankPlayerSummaries, tankHighlights, {
     aspectRatio: 21 / 15,
     scoreUnit: "HP",
+  }),
+  boardReplay(tetrisGame, drawTetrisBoard, tetrisPlayerSummaries, tetrisHighlights, {
+    aspectRatio: TETRIS_ASPECT_RATIO,
+    scoreUnit: "分",
   }),
 ];
 

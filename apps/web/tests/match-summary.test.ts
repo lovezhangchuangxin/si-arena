@@ -66,6 +66,30 @@ test("practice and boss games never show rating changes; arena runs show the pla
   expect(standingChange({ ...match, kind: "arena", status: "running" }, "initiator")).toBe("—");
 });
 
+test("solo runs show the achieved score instead of a rating delta", () => {
+  expect(kindLabel("solo")).toBe("单人");
+  const solo = {
+    ...match,
+    kind: "solo" as const,
+    participants: [
+      {
+        userId: "initiator",
+        username: "First",
+        official: false,
+        boss: false,
+        slot: 0,
+        rank: 1,
+        score: 1234,
+      },
+    ],
+  };
+  expect(standingChange(solo, "initiator")).toBe("1,234 分");
+  expect(standingChange({ ...solo, status: "running" }, "initiator")).toBe("—");
+  expect(standingChange(solo, "spectator")).toBe("—");
+  expect(matchOutcome(solo, "initiator").label).toBe("1,234 分");
+  expect(matchOutcome({ ...solo, status: "pending" }, "initiator").label).toBe("等待开局");
+});
+
 test("match rows badge practice, boss and arena games", async () => {
   const router = createRouter({
     history: createMemoryHistory(),

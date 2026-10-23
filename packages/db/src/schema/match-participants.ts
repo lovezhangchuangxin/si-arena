@@ -27,6 +27,8 @@ export const matchParticipants = pgTable(
     officialSnapshot: boolean("official_snapshot").notNull(),
     bossSnapshot: boolean("boss_snapshot").notNull().default(false),
     rank: integer("rank"),
+    /** In-game score from the settled result. */
+    score: integer("score"),
     ratingBefore: numeric("rating_before", { precision: 12, scale: 6 }),
     ratingAfter: numeric("rating_after", { precision: 12, scale: 6 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

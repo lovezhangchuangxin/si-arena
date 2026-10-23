@@ -27,6 +27,7 @@ const initial: GameMeResponse = {
     draws: 0,
     losses: 0,
     placementTotal: 0,
+    bestScore: 0,
   },
   boss: { available: false, attempts: 0, wins: 0 },
   code: {

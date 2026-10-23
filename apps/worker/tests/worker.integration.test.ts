@@ -143,9 +143,10 @@ async function stagedSettlement(): Promise<SettleInput> {
 
 /** A claimed match of any kind and size, ready to settle with the given ranks. */
 async function stagedRun(
-  kind: "practice" | "arena",
-  seats: Array<{ official?: boolean }>,
+  kind: "practice" | "arena" | "solo",
+  seats: Array<{ official?: boolean; boss?: boolean }>,
   ranks: number[],
+  scores?: number[],
 ): Promise<SettleInput> {
   const people = [];
   for (const seat of seats) {
@@ -191,7 +192,11 @@ async function stagedRun(
     result: {
       reason: "fixture",
       completedTicks: 1,
-      players: people.map((person, index) => ({ id: person.id, rank: ranks[index]!, score: 0 })),
+      players: people.map((person, index) => ({
+        id: person.id,
+        rank: ranks[index]!,
+        score: scores?.[index] ?? 0,
+      })),
     },
   };
 }
@@ -204,21 +209,66 @@ async function entryOf(userId: string) {
   return entry!;
 }
 
-dbTest("practice settlement records ranks without touching anyone's standing", async () => {
-  const input = await stagedRun("practice", [{}, { official: true }], [1, 2]);
-  expect((await settleMatch(database.db, store, input)).outcome).toBe("completed");
-  const seats = await database.db
-    .select()
-    .from(matchParticipants)
-    .where(eq(matchParticipants.matchId, input.matchId))
-    .orderBy(matchParticipants.slot);
-  expect(seats.map((seat) => [seat.rank, seat.ratingAfter])).toEqual([
-    [1, null],
-    [2, null],
-  ]);
-  for (const player of input.result.players)
-    expect(await entryOf(player.id)).toMatchObject({ rating: "1000.000000", matchesPlayed: 0 });
-});
+/** A claimed solo run for an existing user, ready to settle with the given score. */
+async function soloRunOf(userId: string, score: number): Promise<SettleInput> {
+  const [user] = await database.db.select().from(users).where(eq(users.id, userId));
+  const [match] = await database.db
+    .insert(matches)
+    .values({
+      gameId: paperCatalogEntry.id,
+      release: paperCatalogEntry.release,
+      config: paperCatalogEntry.config,
+      resolvedLimits: paperCatalogEntry.resolvedLimits,
+      botProtocolVersion: paperCatalogEntry.botProtocolVersion,
+      seed: 7,
+      initiatorId: userId,
+      idempotencyKey: `worker-test-${matchCounter++}`,
+      kind: "solo",
+      status: "pending",
+    })
+    .returning();
+  await database.db.insert(matchParticipants).values({
+    matchId: match!.id,
+    userId,
+    slot: 0,
+    nameSnapshot: user!.normalizedUsername,
+    officialSnapshot: false,
+  });
+  const claim = await claimNextMatch(database.db, claimableReleases());
+  expect(claim?.id).toBe(match!.id);
+  const candidatePath = store.candidatePath(match!.id, claim!.executionId);
+  await writeFile(candidatePath, "solo settlement fixture");
+  return {
+    matchId: match!.id,
+    executionId: claim!.executionId,
+    candidatePath,
+    replayFile: await store.inspect(candidatePath, match!.id),
+    result: {
+      reason: "fixture",
+      completedTicks: 1,
+      players: [{ id: userId, rank: 1, score }],
+    },
+  };
+}
+
+dbTest(
+  "practice settlement records ranks and scores without touching anyone's standing",
+  async () => {
+    const input = await stagedRun("practice", [{}, { official: true }], [1, 2], [7, 3]);
+    expect((await settleMatch(database.db, store, input)).outcome).toBe("completed");
+    const seats = await database.db
+      .select()
+      .from(matchParticipants)
+      .where(eq(matchParticipants.matchId, input.matchId))
+      .orderBy(matchParticipants.slot);
+    expect(seats.map((seat) => [seat.rank, seat.score, seat.ratingAfter])).toEqual([
+      [1, 7, null],
+      [2, 3, null],
+    ]);
+    for (const player of input.result.players)
+      expect(await entryOf(player.id)).toMatchObject({ rating: "1000.000000", matchesPlayed: 0 });
+  },
+);
 
 dbTest("arena settlement moves ratings pairwise by rank and prunes old runs", async () => {
   const arena = { seats: 5, keepMatches: 1 };
@@ -263,6 +313,49 @@ dbTest("arena settlement moves ratings pairwise by rank and prunes old runs", as
       wins: 1,
       matchesPlayed: 1,
     });
+});
+
+dbTest("solo settlement keeps the best score and refuses repeats or bot seats", async () => {
+  const player = await stagedRun("solo", [{}], [1], [120]);
+  expect((await settleMatch(database.db, store, player)).outcome).toBe("completed");
+  const userId = player.result.players[0]!.id;
+  expect(await entryOf(userId)).toMatchObject({
+    rating: "1000.000000",
+    bestScore: 120,
+    matchesPlayed: 1,
+    wins: 0,
+    losses: 0,
+  });
+  const seat = (
+    await database.db
+      .select()
+      .from(matchParticipants)
+      .where(eq(matchParticipants.matchId, player.matchId))
+  )[0]!;
+  expect([seat.rank, seat.score, seat.ratingBefore, seat.ratingAfter]).toEqual([
+    1,
+    120,
+    null,
+    null,
+  ]);
+
+  // A settled solo run is terminal: settling again is refused and scores nothing.
+  expect((await settleMatch(database.db, store, player)).outcome).toBe("refused");
+
+  // A worse later run still counts as played but never lowers the record;
+  // a better one raises it.
+  const worse = await soloRunOf(userId, 30);
+  expect((await settleMatch(database.db, store, worse)).outcome).toBe("completed");
+  expect(await entryOf(userId)).toMatchObject({ bestScore: 120, matchesPlayed: 2 });
+  const better = await soloRunOf(userId, 200);
+  expect((await settleMatch(database.db, store, better)).outcome).toBe("completed");
+  expect(await entryOf(userId)).toMatchObject({ bestScore: 200, matchesPlayed: 3 });
+
+  // Solo matches never seat the official bot or the boss.
+  const officialRun = await stagedRun("solo", [{ official: true }], [1], [10]);
+  await expect(settleMatch(database.db, store, officialRun)).rejects.toThrow(
+    "Solo match cannot seat the official bot or the boss",
+  );
 });
 
 dbTest("a solo arena run against the official bot counts play but no rating change", async () => {

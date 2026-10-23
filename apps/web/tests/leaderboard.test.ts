@@ -2,7 +2,9 @@ import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { paperGame } from "@si-arena/game-paper/game";
+import { tetrisGame } from "@si-arena/game-tetris/game";
 import LeaderboardPage from "../src/pages/LeaderboardPage.vue";
+import { leaderboardBlurb } from "../src/games/leaderboard";
 import { clearSession, signIn } from "../src/auth/session";
 
 enableAutoUnmount(afterEach);
@@ -19,6 +21,7 @@ const row = (rank: number, userId: string, username: string) => ({
   draws: 1,
   losses: 1,
   placementTotal: 0,
+  bestScore: 0,
 });
 const board = {
   total: 2,
@@ -107,6 +110,43 @@ test("other players can be challenged to a practice game, never yourself", async
   expect(post[1]?.body).toBe('{"opponentId":"rival"}');
   expect(new Headers(post[1]?.headers).get("Idempotency-Key")).toBeTruthy();
   expect(router.currentRoute.value.fullPath).toBe("/games/paper?match=practice");
+});
+
+test("solo boards explain best-score ordering and never offer challenges", async () => {
+  // The blurb derives the ordering from the manifest alone.
+  expect(leaderboardBlurb(tetrisGame.manifest)).toContain("单人最高得分");
+
+  const solo = {
+    total: 2,
+    page: 1,
+    limit: 20,
+    players: [
+      { ...row(1, "rival", "Rival"), bestScore: 900 },
+      { ...row(2, "me", "Me"), bestScore: 120 },
+    ],
+  };
+  const fetch = vi.fn(async (url: string, options?: RequestInit) => {
+    if (url === "/api/auth/login") return response({ user, token: "a".repeat(43) });
+    if (url.endsWith("/matches") && options?.method === "POST") return response({}, 201);
+    return response(solo);
+  });
+  vi.stubGlobal("fetch", fetch);
+  await signIn("login", "me", "secret");
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [{ path: "/:pathMatch(.*)*", component: { template: "<p />" } }],
+  });
+  await router.push("/leaderboard");
+  const wrapper = mount(LeaderboardPage, {
+    props: { game: tetrisGame.manifest },
+    global: { plugins: [router] },
+  });
+  await flushPromises();
+
+  // No challenge buttons exist on a solo board, only the best-score column.
+  expect(wrapper.findAll("button").filter((b) => b.text() === "挑战")).toHaveLength(0);
+  expect(wrapper.text()).toContain("最高分");
+  expect(wrapper.text()).toContain("900");
 });
 
 test("arena boards rank by rating and show championships and the average place", async () => {

@@ -206,6 +206,22 @@ for (let tick = 0; tick < 600 && !tankResult; tick++) {
 if (tankResult?.reason !== "tick-limit" || tankResult.completedTicks !== 600 || tankResult.players.some(p => p.rank !== 1 || p.score !== 3 || !p.alive)) {
   throw new Error("Standalone tank match returned an unexpected result");
 }
+import { tetrisGame, TETRIS_SDK_SOURCE, officialBotUrl as tetrisBotUrl } from "@si-arena/game-tetris/game";
+const tetrisRegistration = defineLocalGame({game:tetrisGame,officialBotUrl:tetrisBotUrl,module:{url:import.meta.resolve("@si-arena/game-tetris/game"),gameExport:"tetrisGame",sdkSourceExport:"TETRIS_SDK_SOURCE"}});
+if(tetrisRegistration.manifest.id!=="tetris"||tetrisRegistration.manifest.minPlayers!==1||tetrisRegistration.manifest.maxPlayers!==1)throw new Error("Packed tetris registration failed");
+let tetrisState = tetrisGame.rules.init({
+  seed: 2, config: tetrisGame.manifest.config,
+  players: [{ id: "alpha", slot: 0 }],
+});
+let tetrisResult = undefined as ReturnType<typeof tetrisGame.rules.step>["result"];
+for (let tick = 0; tick < 1500 && !tetrisResult; tick++) {
+  const output = tetrisGame.rules.step(tetrisState, { alpha: { type: "idle" as const } });
+  tetrisState = output.nextState; tetrisResult = output.result;
+}
+// An idle player never clears a line and tops out once the stack reaches the spawn row.
+if (tetrisResult?.reason !== "top-out" || tetrisResult.completedTicks !== 1260 || tetrisResult.players.some(p => p.rank !== 1 || p.score !== 0)) {
+  throw new Error("Standalone tetris run returned an unexpected result");
+}
 const bot = await SandboxPlayer.create({
   matchId: "artifact", playerId: "alpha", source: "let calls=0;export default ({game,Memory})=>{calls++;Memory.n=(Memory.n??0)+1;Memory.calls=calls;game.act()}",
   sdkSource: "export default (o,{submit})=>{submit({type:'idle'});return {act(){submit({type:o.fail?'invalid':'idle'})}}}",

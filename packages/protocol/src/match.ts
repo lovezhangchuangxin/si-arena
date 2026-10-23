@@ -9,9 +9,10 @@ export type MatchStatus = "pending" | "running" | "completed" | "failed";
  * - ranked: matchmaking against another player; both ratings change.
  * - practice: a chosen opponent or the official fallback; no rating change.
  * - boss: a challenge against the platform boss; no rating change.
- * - arena: a run of a game's single shared arena; scored with pairwise Elo.
+ * - arena: a run of a game's shared arena; scored with pairwise Elo.
+ * - solo: a single-player run; the game entry keeps the best score.
  */
-export const MATCH_KINDS = ["ranked", "practice", "boss", "arena"] as const;
+export const MATCH_KINDS = ["ranked", "practice", "boss", "arena", "solo"] as const;
 export type MatchKind = (typeof MATCH_KINDS)[number];
 
 /**
@@ -40,6 +41,8 @@ export interface MatchParticipantSummary {
   boss: boolean;
   slot: number;
   rank?: number;
+  /** In-game score from the settled result, written at settlement time. */
+  score?: number;
   ratingBefore?: number;
   ratingAfter?: number;
 }
@@ -79,6 +82,8 @@ export interface GameEntryStats {
   losses: number;
   /** Arena games: the sum of finishing ranks, for the average placement. */
   placementTotal: number;
+  /** Solo games: the best score achieved across finished runs. */
+  bestScore: number;
 }
 
 export interface BossRecord {
@@ -110,6 +115,8 @@ export interface LeaderboardPlayer {
   losses: number;
   /** Arena games: the sum of finishing ranks, for the average placement. */
   placementTotal: number;
+  /** Solo games: the best score achieved across finished runs. */
+  bestScore: number;
 }
 
 export interface LeaderboardResponse {

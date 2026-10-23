@@ -20,6 +20,11 @@ import {
   developmentFiles as tankDevelopmentFiles,
   officialBotUrl as tankOfficialBotUrl,
 } from "@si-arena/game-tank/game";
+import { tetrisCatalogEntry } from "@si-arena/game-tetris";
+import {
+  developmentFiles as tetrisDevelopmentFiles,
+  officialBotUrl as tetrisOfficialBotUrl,
+} from "@si-arena/game-tetris/game";
 import type { GameCatalogEntry } from "@si-arena/protocol";
 
 export interface RegisteredGame {
@@ -49,6 +54,11 @@ export const registeredGames: readonly RegisteredGame[] = [
     entry: tankCatalogEntry,
     officialBotUrl: tankOfficialBotUrl,
     developmentFiles: tankDevelopmentFiles,
+  },
+  {
+    entry: tetrisCatalogEntry,
+    officialBotUrl: tetrisOfficialBotUrl,
+    developmentFiles: tetrisDevelopmentFiles,
   },
 ];
 

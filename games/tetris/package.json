@@ -1,0 +1,64 @@
+{
+  "name": "@si-arena/game-tetris",
+  "version": "0.7.0",
+  "license": "MIT",
+  "author": {
+    "name": "lovekeqing",
+    "email": "2911331070@qq.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lovezhangchuangxin/si-arena.git",
+    "directory": "games/tetris"
+  },
+  "files": [
+    "dist",
+    "bots",
+    "PROMPT.md",
+    "SDK.md",
+    "README.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./sdk": {
+      "types": "./dist/sdk/index.d.ts",
+      "import": "./dist/sdk/index.js"
+    },
+    "./renderer": {
+      "types": "./dist/renderer/index.d.ts",
+      "import": "./dist/renderer/index.js"
+    },
+    "./rules": {
+      "types": "./dist/rules/index.d.ts",
+      "import": "./dist/rules/index.js"
+    },
+    "./game": {
+      "types": "./dist/game.d.ts",
+      "import": "./dist/game.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown --config ../../tsdown.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "dev": "tsdown --config ../../tsdown.config.ts --watch",
+    "prepack": "pnpm build",
+    "test": "vitest run --configLoader runner --config ../../vitest.config.ts --project tetris-rules"
+  },
+  "dependencies": {
+    "@si-arena/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@si-arena/engine": "workspace:*",
+    "@si-arena/sandbox": "workspace:*"
+  },
+  "engines": {
+    "node": ">=26"
+  }
+}

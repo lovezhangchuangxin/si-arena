@@ -29,6 +29,10 @@ export interface GameCatalogEntry extends Omit<GameManifest, "limits"> {
   resolvedLimits: ResourceLimits;
 }
 
+/** True for single-player games: exactly one seat, ranked by best score. */
+export const isSoloGame = (game: Pick<GameManifest, "minPlayers" | "maxPlayers">): boolean =>
+  game.minPlayers === 1 && game.maxPlayers === 1;
+
 export interface InitInput {
   seed: number;
   players: Array<{ id: string; slot: number }>;

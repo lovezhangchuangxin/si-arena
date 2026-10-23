@@ -19,6 +19,7 @@ versioning:
     - "@si-arena/development"
     - "@si-arena/game-paper"
     - "@si-arena/game-tank"
+    - "@si-arena/game-tetris"
     - "@si-arena/game-bomber"
     - "@si-arena/game-royale"
     - "@si-arena/game-snake"

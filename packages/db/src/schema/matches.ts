@@ -72,6 +72,9 @@ export const matches = pgTable(
       "matches_status_values",
       sql`${table.status} IN ('pending', 'running', 'completed', 'failed')`,
     ),
-    check("matches_kind_values", sql`${table.kind} IN ('ranked', 'practice', 'boss', 'arena')`),
+    check(
+      "matches_kind_values",
+      sql`${table.kind} IN ('ranked', 'practice', 'boss', 'arena', 'solo')`,
+    ),
   ],
 );

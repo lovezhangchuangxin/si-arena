@@ -9,6 +9,8 @@ import { bomberGame } from "@si-arena/game-bomber/game";
 import { drawBomberBoard } from "@si-arena/game-bomber/renderer";
 import { tankGame } from "@si-arena/game-tank/game";
 import { drawTankBoard } from "@si-arena/game-tank/renderer";
+import { tetrisGame } from "@si-arena/game-tetris/game";
+import { drawTetrisBoard, TETRIS_ASPECT_RATIO } from "@si-arena/game-tetris/renderer";
 
 export interface GamePreviewScene {
   aspectRatio: number;
@@ -140,6 +142,29 @@ export const gamePreviews: ReadonlyMap<string, (game: GameCatalogEntry) => GameP
           aspectRatio: state.width / state.height,
           draw: (context, width, height) =>
             drawTankBoard(context, state, width, height, {
+              previousState: state,
+              events: [],
+              progress: 1,
+              reducedMotion: true,
+              erroredPlayers: new Set(),
+            }),
+        };
+      },
+    ],
+    [
+      tetrisGame.manifest.id,
+      (game) => {
+        if (game.release !== tetrisGame.manifest.release)
+          throw new Error("未注册此游戏发行的初始画面。");
+        const state = tetrisGame.rules.init({
+          seed: 42,
+          config: tetrisGame.parseConfig(game.config),
+          players: [{ id: "preview-1", slot: 0 }],
+        });
+        return {
+          aspectRatio: TETRIS_ASPECT_RATIO,
+          draw: (context, width, height) =>
+            drawTetrisBoard(context, state, width, height, {
               previousState: state,
               events: [],
               progress: 1,

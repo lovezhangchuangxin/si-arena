@@ -96,6 +96,7 @@ export function parseGameMe(raw: unknown): GameMeResponse {
   const entry = record(v.entry);
   check(entry.rank === null || (Number.isSafeInteger(entry.rank) && (entry.rank as number) > 0));
   integer(entry.placementTotal);
+  integer(entry.bestScore);
   const boss = record(v.boss);
   boolean(boss.available);
   integer(boss.attempts);
@@ -132,7 +133,8 @@ function summary(raw: unknown): MatchSummary {
     boolean(p.official);
     boolean(p.boss);
     integer(p.slot);
-    for (const k of ["rank", "ratingBefore", "ratingAfter"]) if (p[k] !== undefined) number(p[k]);
+    for (const k of ["rank", "score", "ratingBefore", "ratingAfter"])
+      if (p[k] !== undefined) number(p[k]);
   }
   return raw as MatchSummary;
 }
@@ -174,7 +176,7 @@ export function parseLeaderboard(raw: unknown): LeaderboardResponse {
   for (const p of v.players) {
     user({ ...record(p), id: record(p).userId });
     stats(p);
-    for (const k of ["rank", "placementTotal"]) integer(record(p)[k]);
+    for (const k of ["rank", "placementTotal", "bestScore"]) integer(record(p)[k]);
   }
   return raw as LeaderboardResponse;
 }

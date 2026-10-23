@@ -29,6 +29,13 @@
       "when": 1792687178096,
       "tag": "0003_arena_rating_elo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792757474195,
+      "tag": "0004_fearless_whistler",
+      "breakpoints": true
     }
   ]
 }

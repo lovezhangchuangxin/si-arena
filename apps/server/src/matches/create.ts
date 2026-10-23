@@ -242,3 +242,19 @@ export async function createDuel(
     });
   });
 }
+
+/** Creates a single-seat solo run for the initiator; no opponent is involved. */
+export async function createSoloRun(
+  db: NodePgDatabase,
+  game: GameCatalogEntry,
+  options: { initiator: Seat; idempotencyKey: string },
+): Promise<MatchRow> {
+  return db.transaction(async (tx) =>
+    insertMatch(tx, game, {
+      initiatorId: options.initiator.userId,
+      idempotencyKey: options.idempotencyKey,
+      kind: "solo",
+      seats: [options.initiator],
+    }),
+  );
+}

@@ -21,6 +21,7 @@ async function participantsOf(
     boss: row.bossSnapshot,
     slot: row.slot,
     ...(row.rank !== null ? { rank: row.rank } : {}),
+    ...(row.score !== null ? { score: row.score } : {}),
     ...(row.ratingBefore !== null ? { ratingBefore: Number(row.ratingBefore) } : {}),
     ...(row.ratingAfter !== null ? { ratingAfter: Number(row.ratingAfter) } : {}),
   }));

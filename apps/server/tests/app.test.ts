@@ -12,6 +12,7 @@ test("health and game metadata work without a database or player executor", asyn
       "snake",
       "bomber",
       "tank",
+      "tetris",
     ]);
     expect(list.games[1].arena).toMatchObject({ seats: 5, keepMatches: 3 });
     const game = (await app.inject("/api/games/paper")).json();
