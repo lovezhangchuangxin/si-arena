@@ -83,18 +83,22 @@ TypeScript 的 paths、include、exclude 和 rootDir 按声明它们的配置文
 
 ```ts
 interface GameRules<State, Observation, Action, Event> {
-  init(input: InitInput): State
-  observe(state: DeepReadonly<State>, playerId: string, context?: { events: DeepReadonly<Event[]> }): Observation | null
-  parseAction(raw: JsonValue): ActionParseResult<Action>
-  defaultAction(state: DeepReadonly<State>, playerId: string): Action
+  init(input: InitInput): State;
+  observe(
+    state: DeepReadonly<State>,
+    playerId: string,
+    context?: { events: DeepReadonly<Event[]> },
+  ): Observation | null;
+  parseAction(raw: JsonValue): ActionParseResult<Action>;
+  defaultAction(state: DeepReadonly<State>, playerId: string): Action;
   step(
     state: DeepReadonly<State>,
-    actions: DeepReadonly<Record<string, Action>>
+    actions: DeepReadonly<Record<string, Action>>,
   ): {
-    nextState: State
-    events: Event[]
-    result?: GameResult
-  }
+    nextState: State;
+    events: Event[];
+    result?: GameResult;
+  };
 }
 ```
 
@@ -117,7 +121,7 @@ manifest 的 `botProtocolVersion` 是从 1 开始的整数，标识玩家代码�
 
 代码上传时记录当时的协议版本。新发行只接纳协议版本相同且源码体积合规的选手；不兼容时要求重新上传，兼容升级继续使用原代码，排位均保留。游戏发布先安装不可变规则与开发包，并准备符合新协议的官方 bot，再切换当前发行，保证回退对手可用。不同发行不能共享可变配置对象。
 
-注册采用仓库内显式列表：构建时分别生成后端规则入口与前端 renderer 入口。新增游戏时添加游戏包并更新注册列表即可，不修改引擎循环、账号或排位实现。
+注册采用仓库内显式列表：服务端、worker、网页、本地 CLI 和开发包构建各使用显式可信注册。新增符合现有参赛与计分模式的游戏时添加游戏包并更新注册列表，不修改引擎循环或增加游戏 ID 分支；新增参赛模式需要同步扩展通用协议、平台行为与文档。
 
 首版不支持用户上传游戏模块，不提供远程热加载。游戏包的插件机制服务开发扩展，不给予玩家代码同等权限。
 
@@ -125,7 +129,7 @@ manifest 的 `botProtocolVersion` 是从 1 开始的整数，标识玩家代码�
 
 比赛运行器使用 `GameDefinition` 组合可信 manifest、上述 rules、parseConfig、parseState 和 parseObservation。状态解析器接收冻结配置与参赛席位，检查世界中的玩家映射；观察解析器校验当前玩家及 tick，错误观察不得作为玩家失误处理。引擎不加入具体游戏分支。圈地通过 `@si-arena/game-paper/game` 导出定义、SDK 源码与官方 bot 的可信资源位置，根元数据入口仍不加载规则、renderer 或 bot。
 
-`@si-arena/engine` 通过工厂创建各玩家的执行适配器，不依赖 sandbox；适配器验证动作与 Memory，并在失败时保留旧 Memory。核心入口提供比赛与回放逻辑，可供浏览器使用；文件和 gzip 功能只从 `@si-arena/engine/node` 导出。回放使用 ReplaySink 流式追加完整 tick，候选文件生成后仍由 worker 按执行权和数据库事务发布、计分。接口与可运行示例见 [引擎说明](../../packages/engine/README.md)。
+`@si-arena/engine` 通过工厂创建各玩家的执行适配器，不依赖 sandbox；适配器验证动作与 Memory，并在失败时保留旧 Memory。核心入口提供比赛与回放逻辑，可供浏览器使用；文件和 gzip 功能只从 `@si-arena/engine/node` 导出。回放使用 ReplaySink 流式追加完整 tick，候选文件生成后仍由 worker 按执行权和数据库事务发布、结算。接口与可运行示例见 [引擎说明](../../packages/engine/README.md)。
 
 CLI 与 worker 通过 runner 共用比赛进程监督，传入显式可信游戏模块入口、冻结源码、配置与发行。runner 在独立比赛进程内组装 engine 和 sandbox，持有世界与已提交 Memory；sandbox 不依赖 engine、账号或数据库，engine 核心不依赖 Node。
 
@@ -133,8 +137,8 @@ CLI 与 worker 通过 runner 共用比赛进程监督，传入显式可信游戏
 
 ```js
 export default function tick({ game, Memory }) {
-  Memory.turns = (Memory.turns ?? 0) + 1
-  game.self.move('right')
+  Memory.turns = (Memory.turns ?? 0) + 1;
+  game.self.move("right");
 }
 ```
 

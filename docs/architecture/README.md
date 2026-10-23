@@ -4,16 +4,16 @@
 
 ## 文档索引
 
-| 文档 | 内容 |
-| --- | --- |
-| [系统架构与技术选型](overview.md) | 技术栈、服务职责、部署边界、任务与失败处理 |
-| [Monorepo 与游戏模块](monorepo-and-modules.md) | 目录、依赖方向、插件接口、SDK、玩家入口 |
-| [玩家代码沙箱](sandbox.md) | V8 isolate、进程隔离、资源限制、日志、恢复 |
-| [资源限额](resource-limits.md) | 代码、CPU、内存、Memory、日志、IPC 与执行并发的确定值 |
-| [tick 执行与回放](execution-and-replay.md) | 动作提交、确定性、回放结构、播放器与兼容性 |
-| [数据模型与 API](data-model-and-api.md) | 最新代码、排位、任务、幂等结算、首版接口 |
-| [本地分发与开发流程](distribution-and-development.md) | 独立下载包、构建、CLI、验证与实施顺序 |
-| [部署与发布](deployment.md) | 生产 compose、镜像、上线步骤、npm 发布与备份 |
+| 文档                                                  | 内容                                                  |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| [系统架构与技术选型](overview.md)                     | 技术栈、服务职责、部署边界、任务与失败处理            |
+| [Monorepo 与游戏模块](monorepo-and-modules.md)        | 目录、依赖方向、游戏接口、SDK、玩家入口               |
+| [玩家代码沙箱](sandbox.md)                            | V8 isolate、进程隔离、资源限制、日志、恢复            |
+| [资源限额](resource-limits.md)                        | 代码、CPU、内存、Memory、日志、IPC 与执行并发的确定值 |
+| [tick 执行与回放](execution-and-replay.md)            | 动作提交、确定性、回放结构、播放器与兼容性            |
+| [数据模型与 API](data-model-and-api.md)               | 最新代码、Elo/最高分、任务、幂等结算与 HTTP 接口      |
+| [本地分发与开发流程](distribution-and-development.md) | 独立下载包、构建、CLI、完整性与更新协议               |
+| [部署与发布](deployment.md)                           | 生产 compose、镜像、上线步骤、npm 发布与备份          |
 
 ## 架构约束
 
@@ -29,7 +29,7 @@
 
 ## 阅读顺序
 
-先读 [总览](overview.md)，再读 [模块接口](monorepo-and-modules.md)、[沙箱](sandbox.md) 和 [执行与回放](execution-and-replay.md)。数据库、API 和分发文档在实现对应组件时使用。
+运行仓库、测试命令与文档维护见 [开发指南](../development.md)。理解架构时先读 [总览](overview.md)，再读 [模块接口](monorepo-and-modules.md)、[沙箱](sandbox.md) 和 [执行与回放](execution-and-replay.md)。数据库、API 和分发文档在实现对应组件时使用。
 
 ## 验收要求
 
@@ -41,6 +41,8 @@
 
 实现必须通过上述验收并记录测量结果，不能从库支持某个 API 推导出完整的安全或性能保证。资源限制以 [资源限额](resource-limits.md) 为准。
 
-2026-10-20 的[玩家执行性能调研与优化方案](../research/player-execution-performance.md)记录原始完整比赛与阶段基准；当前玩家接口 v2 使用游戏自定义的基础动作方法登记意图，沿用常驻执行，随后完成[数据路径优化与配对实测](../research/player-data-optimization.md)，当前契约以本目录为准。
+## 历史研究记录
 
-当前[基础动作 API 实施记录](../research/player-api-implementation.md)说明游戏自定义命令、公开观察、事件、失败恢复与未发布 0.2.0 的接口迁移。
+[玩家执行性能调研](../research/player-execution-performance.md)、[基础动作 API 实施记录](../research/player-api-implementation.md)、[数据路径优化](../research/player-data-optimization.md) 和 [runner 架构实测](../research/runner-architecture-performance.md) 保留不同阶段的设计与测量依据。它们中的 QuickJS、旧发行、旧 tick 数及验证结果只适用于记录当时的基线，不是当前能力说明。
+
+当前规则以对应游戏设计与 manifest 为准，执行语义以本目录为准；各游戏的 botProtocolVersion 独立，不存在所有游戏统一为 v2 的要求。研究记录中的旧脚本也不能直接当作当前发行的验收脚本。

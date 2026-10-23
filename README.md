@@ -4,7 +4,7 @@
 
 <h3>让 AI 写的代码，替你上场。</h3>
 
-在本地用任意 AI 编写 JavaScript 选手 → 上传 → 匹配对手 → 在浏览器里逐 tick 回放每一步。
+在本地用任意 AI 编写 JavaScript 选手 → 上传 → 主动参赛 → 在浏览器里逐 tick 回放每一步。
 
 [![Node.js 26](https://img.shields.io/badge/Node.js-26-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](configs/typescript/base.json)
@@ -14,69 +14,64 @@
 [![npm](https://img.shields.io/npm/v/@si-arena/cli?label=%40si-arena%2Fcli&color=CB3837&logo=npm)](https://www.npmjs.com/package/@si-arena/cli)
 [![MIT](https://img.shields.io/badge/license-MIT-7E8898)](LICENSE)
 
-[两种玩法](#两种玩法) · [三步上场](#三步上场) · [核心特性](#核心特性) · [架构](#架构) · [开发者文档](#开发者文档)
+[玩法](#玩法) · [三步上场](#三步上场) · [核心特性](#核心特性) · [仓库开发](#仓库开发) · [文档导航](#文档导航)
 
 </div>
 
-## 两种玩法
+SI Arena（SI = Super Intelligence）是 AI 编程自由竞技游戏平台。你在本地用自己选择的 AI 编写 JavaScript 策略，上传后主动参赛，通过比赛与回放继续改进。平台不接入模型 API，不验证代码来源，也不把比赛成绩当作严格的模型能力评测。
 
-<table>
-<tr>
-<td width="50%" valign="top">
+## 玩法
 
-<img src="docs/assets/readme/duel.svg" width="100%" alt="1v1 圈地动画：蓝方圈下一块地，橙方切断蓝方尾迹把它送回出生点">
+| 游戏 ID  | 玩法                                                                              | 线上参赛与排行             |
+| -------- | --------------------------------------------------------------------------------- | -------------------------- |
+| `paper`  | [网格圈地](docs/designs/paper.md)：拉出尾迹、回城圈地，切断对手尾迹使其回到出生点 | 1v1 匹配，Elo 排位         |
+| `tank`   | [坦克对决](docs/designs/tank.md)：在迷宫中机动开火，击破对手                      | 1v1 匹配，Elo 排位         |
+| `royale` | [圈地大逃杀](docs/designs/royale.md)：最多五人圈地，淘汰后安全区逐步收缩          | 多人竞技场，按名次计算 Elo |
+| `snake`  | [贪吃蛇大作战](docs/designs/snake.md)：最多四条蛇争夺食物、体力与生存空间         | 多人竞技场，按名次计算 Elo |
+| `bomber` | [炸弹人](docs/designs/bomber.md)：最多四人放置炸弹、拾取道具，躲避火焰与坍塌      | 多人竞技场，按名次计算 Elo |
+| `tetris` | [俄罗斯方块](docs/designs/tetris.md)：单人消行、提速，在 tick 上限内争取高分      | 单人挑战，按历史最高分排行 |
 
-### 圈地 · 1v1 排位
+<img src="docs/assets/readme/duel.svg" width="49%" alt="圈地：蓝方圈地，橙方切断尾迹">
+<img src="docs/assets/readme/royale.svg" width="49%" alt="大逃杀：多人圈地，安全区随淘汰逐步收缩">
 
-离开领地拉出尾迹，回到领地圈下中间的格子；踩中对手的尾迹，把他送回出生点。30×30 地图、500 tick，比谁的地盘大。
-
-系统按排位分找实力接近的真人对手，对手离线也能开局；排行榜实时刷新。还能指定对手练习，或挑战部署方的私有 Boss。完整规则见 [圈地设计](docs/designs/paper.md)。
-
-</td>
-<td width="50%" valign="top">
-
-<img src="docs/assets/readme/royale.svg" width="100%" alt="大逃杀动画：五名选手圈地，安全区随淘汰向中心收缩">
-
-### 圈地 · 大逃杀
-
-最多五人同场，尾迹被切断、被圈住、撞头或留在圈外就出局。每淘汰一人，安全区向中心收一圈，最后站着的人赢。
-
-开局者必入场，排行榜前 4 名自动入选，全服同一时间只跑一局，任何人都能按下开始；跑完后所有人一起看回放和战况。完整规则见 [大逃杀设计](docs/designs/royale.md)。
-
-</td>
-</tr>
-</table>
+每个游戏的代码和成绩独立。双人游戏可以匹配离线选手；没有真人对手时与官方 bot 练习。多人竞技场由开局者与榜单选手入场，每个游戏同时只运行一场竞技场比赛。单人挑战无需对手，所有模式都可能等待 worker 的空闲容量。
 
 ## 三步上场
 
+需要 Node.js 26+、pnpm 12，以及一个已部署的平台地址。以下以圈地为例；其他游戏替换游戏 ID 和目录名。
+
+**1. 初始化开发包。** 把示例域名换成平台实际地址；本地部署可用 `http://127.0.0.1:3000`。
+
 ```sh
-# 1. 下载服务器最新开发包：提示词、SDK、官方 bot、本地对战与回放工具
-npx @si-arena/cli@latest init paper ./paper-bot --server https://<平台地址>
-cd paper-bot && pnpm install --frozen-lockfile
+npx @si-arena/cli@latest init paper ./paper-bot --server https://arena.example.com
+cd paper-bot
+pnpm install --frozen-lockfile
+```
 
-# 2. 把统一提示词交给你喜欢的 AI，让它写 bot.js；本地和官方 bot 实时对战
+**2. 编写并调试。** 把开发包中的 `PROMPT.md` 交给你的 AI，让它结合 `SDK.md` 改进 `bot.js`。也可直接复制游戏页面的「AI 安装提示词」。
+
+```sh
 pnpm arena dev --bot ./bot.js
+```
 
-# 3. 批量自测满意后，回到网页上传 bot.js，发起匹配
+浏览器打开命令输出的网址查看本地比赛。修改代码后在页面重新开局。对抗游戏默认加入官方对手，单人游戏只运行自己的策略。
+
+**3. 验证后上传。** 批量自测，回到网页注册或登录，上传 `bot.js`，再主动发起匹配、竞技场或单人挑战。
+
+```sh
 pnpm arena run --bot ./bot.js --matches 20 --seed 42
 ```
 
-大逃杀把 `paper` 换成 `royale` 即可；本地对战默认加入 4 个官方对手，组成 5 人局。
+上传只替换最新源码，不自动开赛。与官方 bot 的双人练习、指定对手练习和 Boss 挑战不计排位分；多人竞技场中的官方席位不参与 Elo 计算。本地比赛均不影响线上成绩。完整操作见开发包 README 和 [CLI 说明](packages/cli/README.md)。
 
 ## 核心特性
 
-<table>
-<tr>
-<td width="33%" valign="top"><b>同一套沙箱</b><br>选手代码只在独立进程里的 V8 isolate 中跑，每场一个进程、每人一个 isolate；本地工具与线上完全相同，每 tick 20 ms CPU 公平计量。</td>
-<td width="33%" valign="top"><b>确定性回放</b><br>回放只保存初始世界和每 tick 的动作，浏览器用同一套规则重演并校验最终哈希，错误、CPU、日志逐 tick 可查。</td>
-<td width="33%" valign="top"><b>实时排行榜</b><br>排位赛结算后双方分数立即生效，被匹配的一方同样计分；官方 bot 与 Boss 只陪练，不上榜。</td>
-</tr>
-<tr>
-<td valign="top"><b>不接模型 API</b><br>用什么 AI、怎么提示都由你决定；平台只看代码在棋盘上的表现。</td>
-<td valign="top"><b>离线开发包</b><br>初始化后不需要平台、数据库或账号：本地对战、批量自测、可视化调试和回放查看全部离线可用。</td>
-<td valign="top"><b>可扩展的游戏</b><br>每个游戏是独立包：规则、SDK、渲染器、提示词与官方 bot，平台核心不出现任何游戏专属分支。</td>
-</tr>
-</table>
+- **共享执行链。** 本地与线上复用规则、引擎和 V8 isolate 沙箱；每场独立进程、每人独立 isolate。实际限额随游戏发行固定，CPU 超时仍受硬件影响。进程内存硬限制的启用条件见 [资源限额](docs/architecture/resource-limits.md)。
+- **确定性回放。** 保存完整初始世界和规范动作，用匹配发行的可信规则重演并校验最终哈希。回放不执行 bot、不保存源码或 Memory；执行错误可查，console 日志只在本地捕获。
+- **离线开发。** 下载开发包并安装依赖后，本地比赛、批量验证、调试与回放不需要账号、数据库或平台在线。
+- **独立游戏包。** 每个游戏提供规则、SDK、renderer、提示词和官方 bot；平台通过显式注册接入。
+
+平台每人每游戏只保留最新源码，历史策略由玩家在本地管理。创建比赛时固定发行和参赛者，worker 开始执行时读取最新源码；此后上传只影响后续开始执行的比赛。
 
 ## 架构
 
@@ -96,185 +91,36 @@ flowchart LR
   replays -- 下载并重演校验 --> web
 ```
 
-## 开发者文档
-
-项目标识为 `si-arena`，SI 是 **Super Intelligence** 的缩写。npm 组织为 `@si-arena`，统一命令行包为 `@si-arena/cli`。
-
-SI Arena 是一个通过网页参与的 AI 编程竞技游戏平台。玩家在本地使用自己选择的 AI，根据游戏页面提供的统一提示词和 SDK 编写 JavaScript 选手代码，上传后主动发起匹配，通过可视化对战和排位比较策略表现。
-
-项目采用自由竞技模式。平台不集成模型 API，不验证代码由哪个模型生成，也不开展严格的模型能力评测。
-
-## 平台规则
-
-1. 选择游戏，下载提示词、SDK、游戏包和官方示例 bot。
-2. 在本地使用 AI 编写代码，通过本地工具运行、调试和查看回放。
-3. 上传该游戏的最新 JS 代码。
-4. 主动发起排位，系统选择实力接近的对手；对手可以离线。
-5. 观看比赛或回放，查看结果和错误，再修改代码继续竞技。
-
-只有玩家主动发起匹配才会产生新比赛。上传代码、玩家离线或后台定时任务都不会自动开赛。官方 bot 由特殊的官方用户持有：没有其他真人可匹配时立即与它进行一场练习赛，因此只有一个真实用户时也能开局；与官方 bot 的比赛不计分，它也不进入排行榜。玩家还可以指定对手练习、挑战部署方私有的 Boss，或在大逃杀竞技场里自己开局与排行榜前 4 名同场。
-
-每个游戏的代码、局内得分和排位独立。平台只保留每位玩家在每个游戏的最新代码，不提供历史版本和回滚。
-
-## 技术方向
-
-| 部分         | 选型                                              |
-| ------------ | ------------------------------------------------- |
-| 仓库与包管理 | pnpm 12 workspace monorepo                        |
-| 网站         | Vue 3、TypeScript、Vite、Vue Router、Tailwind CSS |
-| 业务后端     | Node.js 26、TypeScript、Fastify 5                 |
-| 数据库       | PostgreSQL 18、Drizzle ORM、node-postgres         |
-| 玩家代码执行 | isolated-vm（V8 isolate）、独立比赛进程           |
-| 游戏扩展     | 独立游戏包：规则、SDK、说明、渲染器、官方 bot     |
-| 本地调试     | 与服务端共用引擎、游戏包和沙箱的 CLI 与可视化工具 |
-
-回放保存初始世界状态和每 tick 的有效动作意图，通过确定性的规则引擎还原比赛，不依赖玩家代码。本地回放可以包含玩家日志；本地与服务端回放都记录执行错误。
+Vue 网站、Fastify API 和 worker 分工运行，PostgreSQL 保存账号、任务与成绩，回放保存为 gzip 文件。公共工具使用 `@si-arena` npm 组织；游戏包与 development 为私有 workspace 包，通过服务器开发包分发。
 
 ## 仓库开发
 
-要求 Node.js 26 和 pnpm 12；根目录的 packageManager 固定 pnpm 精确版本，由 pnpm 自身的版本管理切换，不依赖 corepack，也不需要 `.nvmrc`。lint 使用 oxlint，格式化使用 oxfmt。
+使用 Node.js 26 与根 `packageManager` 固定的 pnpm 12。以下命令从仓库根执行，保留已有 `.env`：
 
 ```sh
 pnpm install
-cp .env.example .env
+# 仅首次创建配置；执行迁移前确认其中 DATABASE_URL 指向本地开发库
+if [ ! -e .env ]; then cp .env.example .env; fi
+
+docker compose -f deploy/compose.yaml up -d --wait db
+pnpm db:migrate
 pnpm dev
 ```
 
-网页地址为 [http://127.0.0.1:5173](http://127.0.0.1:5173)，API 地址为 [http://127.0.0.1:3000](http://127.0.0.1:3000)。Vite 将 `/api` 与 `/health` 代理到 API。`pnpm dev` 先构建共享包，再并行监视各 workspace 的变化。
+网站：[http://127.0.0.1:5173](http://127.0.0.1:5173)；API：[http://127.0.0.1:3000](http://127.0.0.1:3000)。开发包下载还需要运行 `pnpm build:devkits`。只运行本地规则与 bot 无需数据库，见 [开发指南](docs/development.md)。
 
-源码的相对 TypeScript 导入省略扩展名，例如 `import { buildApp } from "./app"`。TypeScript 使用 Bundler 模块解析并负责类型检查；Node 应用和共享包通过根 `tsdown.config.ts` 构建 ESM 与类型声明，保持各包既有 dist 路径，输出中的导入由构建器处理为 Node 可直接加载的形式。前端继续使用 Vite；Vue、CSS 等资源引用保留扩展名。
-
-API 提供 `/health`、`/api/games`、`/api/games/:gameId`，`/api/auth` 下的注册、登录、当前会话、登出与密码修改接口，以及按游戏的参赛信息（`/me`）、代码上传（`PUT /me/code`，text/plain）、主动匹配（`POST /matches`，幂等键请求头）、排行榜与比赛详情查询。上传走沙箱静态校验（受限 AST + 同版 V8 模块编译）。health 仅表示 HTTP 进程存活，不代表数据库或比赛执行服务就绪。worker 独立进程直连数据库领取已有比赛，按冻结发行执行整场、把回放写入 `REPLAYS_DIR`（终稿 `<matchId>.json.gz`，候选在 `candidates/` 下），并在单事务中完成 Elo 结算；worker 不创建比赛。
-
-| 命令                                   | 用途                         |
-| -------------------------------------- | ---------------------------- |
-| `pnpm dev:web`                         | 网页开发服务                 |
-| `pnpm dev:server`                      | Fastify 开发服务             |
-| `pnpm dev:worker`                      | worker 启动入口              |
-| `pnpm build`                           | 按依赖顺序构建全部 workspace |
-| `pnpm check`                           | 类型、lint、格式和契约测试   |
-| `pnpm test`                            | Vitest 全仓源码测试          |
-| `pnpm arena --help`                    | 仓库内 CLI 帮助              |
-| `pnpm db:generate` / `pnpm db:migrate` | Drizzle 迁移生成与应用       |
-
-提交时 git hooks 自动运行：pre-commit 用 lint-staged 对暂存文件执行 `oxlint --fix` 与 `oxfmt`，commit-msg 用 commitlint 校验 Conventional Commits 格式（如 `feat: ...`、`chore: ...`）。hooks 在 `pnpm install` 时由根 `prepare` 脚本安装。
-
-PostgreSQL 的本地启动命令为 `docker compose -f deploy/compose.yaml up -d db`，数据保存在命名 volume；数据库连接使用 .env 中的 DATABASE_URL。首次使用先运行 `pnpm db:migrate` 创建表结构；server 启动时会幂等初始化 `official` 官方账号，并为每个已注册游戏安装官方 bot 源码（排位分与统计保持不变）；`BOSSES_DIR`（默认 `data/bosses`）下有 `<gameId>.js` 时同时安装该游戏的私有 Boss。游戏目录与规则页不依赖数据库连接，认证接口需要数据库。数据库集成测试需要 `ARENA_TEST_DATABASE_URL` 指向可创建临时库的连接，例如 `ARENA_TEST_DATABASE_URL=postgresql://si_arena:si_arena@127.0.0.1:5433/si_arena pnpm test --project server`；测试自建并清理独立数据库，未设置该变量时自动跳过。
-
-apps 包含 web、server、worker；packages 包含 protocol、development（私有开发资料与当前开发包管理）、engine、sandbox、runner、player、cli 与 db（server 与 worker 共享的 Drizzle 表结构、连接和迁移）；games/paper、games/royale、games/snake、games/bomber 与 games/tank 分别包含圈地、圈地大逃杀、贪吃蛇大作战、炸弹人与坦克对决的 manifest、SDK、规则与渲染入口。规则与渲染分别导出，服务端加载游戏元数据不会引入 Vue 或 DOM。
-
-`packages/runner` 提供整场独立进程执行器，`packages/sandbox` 提供每玩家独立 isolate：V8 isolate 在本场成功 tick 间常驻、失败后重建、isolate CPU/堆/栈限制、Memory 提交与失败回滚、本地日志，以及受限源码校验。使用方法、Linux 进程内存隔离和性能命令见 [runner 说明](packages/runner/README.md)。
-
-`packages/engine` 提供通用比赛编排、流式 gzip 回放和确定性重演校验，通过适配器调用沙箱。圈地包附带可信游戏定义、运行时基础 API 与官方示例 bot。玩家通过 `game.self.move(direction)` / `idle()` 登记意图，寻路与策略由玩家实现；其他游戏自行定义动作方法，平台不规定方向或角色模型。在根目录运行 `pnpm example:paper --seed 42` 可完成一场本地比赛、保存回放并验证重演，输出结果和回放绝对路径。使用方法见 [引擎说明](packages/engine/README.md)。
-
-共享配置集中在 `configs/`：`typescript/base.json` 定义编译选项，`typescript/test.json` 定义测试源码映射和检查范围，`typescript/tooling.json` 检查工具配置与脚本，`vitest/shared.ts` 定义各测试项目共用的设置。根目录保留 `vitest.config.ts`、`tsdown.config.ts` 工具入口；各 workspace 保留自己的配置并引用共享设置。
-
-## 测试
-
-全仓使用 Vitest，根 `vitest.config.ts` 通过 `test.projects` 发现 apps、packages 与 games 下的项目配置。调度、规则和文件读取使用 Node 环境；web 的 Vue 组件使用 jsdom 和 Vue 插件。新增模块沿用对应目录结构，添加自己的 `vitest.config.ts` 即可被发现，项目名须唯一。
-
-`configs/vitest/shared.ts` 统一测试文件模式、mock 清理和 workspace 源码解析。测试使用 `tests/**/*.test.ts`，显式从 Vitest 导入 `test`、`expect` 等 API。源码路径统一维护在 `configs/typescript/test.json`，Vitest 与测试类型检查使用相同映射；生产包的 exports 仍指向 dist。新增游戏的标准根入口、game、rules、sdk、renderer 均可复用映射，引擎 node 子路径也显式映射到源码，自定义公开子路径需补充相应映射。
-
-`pnpm test` 无需预先构建。测试配置使用 Vite runner loader，以支持无后缀的 TypeScript 配置导入。Node 测试、辅助文件和项目配置纳入 `configs/typescript/test.json`；Vue 测试由 web 的 `tsconfig.test.json` 和 vue-tsc 检查。Vitest 执行成功不能替代类型检查，`pnpm typecheck` 会检查这些文件。
-
-```sh
-pnpm test
-pnpm test --project paper-rules
-pnpm test --project royale-rules
-pnpm test --project snake-rules
-pnpm test --project bomber-rules
-pnpm test --project tank-rules
-pnpm test:watch --project paper-rules
-pnpm test:coverage
-pnpm test:artifacts
-```
-
-覆盖率由根配置统一汇总源码，包含未覆盖的源文件，输出文本、HTML 与 LCOV 报告至 `coverage/`。仅声明类型的模块没有可执行逻辑，不据此添加无意义的运行时测试。
-
-`pnpm test:artifacts` 先完成生产构建，再将公开 workspace 包打包、解压至仓库外并安装声明的运行依赖；使用未加载 TypeScript loader 的真实 Node 校验 exports、CLI、已编译 API、完整圈地比赛及 runner 比赛子进程，并通过严格 NodeNext 消费者检查声明文件。该命令不发布 npm 包，不连接业务数据库，临时目录在结束后清理。
-
-## 本地 CLI
-
-先运行 `pnpm build:packages`，再执行：
-
-```sh
-pnpm arena run --game paper --bot ./games/paper/bots/official.js --seed 42
-pnpm arena run --game paper --bot ./my-bot.js --opponent ./another-bot.js --matches 20 --seed 42
-pnpm arena run --game royale --bot ./games/royale/bots/official.js --opponent ./games/royale/bots/official.js --opponent ./games/royale/bots/official.js --seed 42
-pnpm arena run --game snake --bot ./games/snake/bots/official.js --matches 20 --seed 42
-pnpm arena run --game bomber --bot ./games/bomber/bots/official.js --opponent ./games/bomber/bots/official.js --opponent ./games/bomber/bots/official.js --seed 42
-pnpm arena run --game tank --bot ./games/tank/bots/official.js --matches 20 --seed 42
-pnpm arena replay --game paper ./replays/match-实际文件名.json.gz --verify --logs
-```
-
-根注册配置同时登记圈地、圈地大逃杀、贪吃蛇大作战、炸弹人与坦克对决，因此根目录命令需要 `--game` 选择游戏；独立开发包只含一个游戏，无需该参数。
-
-CLI 支持下载服务器最新开发包初始化、更新已有项目、指定 bot、官方或本地对手、默认并行的批量比赛、gzip 回放及日志校验。输出 JSON Lines，包含发行、完整限额、结果和回放绝对路径。回放无需 bot 文件。根脚本通过可信配置注册游戏，CLI 自身不绑定圈地。`arena dev` 实时调试服务依赖开发包内置的页面资源，在独立开发包内提供。命令与接入方式见 [CLI 说明](packages/cli/README.md)。
-
-## 网页参赛与回放
-
-启动数据库并执行迁移后，运行 `pnpm dev` 同时启动网站、API 和 worker。在网页注册或登录，进入游戏工作台，PC 左侧固定显示游戏画面，右侧提供内容导航与独立滚动区域，底部参赛区提供当前策略、排位与战绩；移动端采用上下布局并固定底部参赛操作。点击「上传策略」或「更新策略」选择 `.js` 文件后自动上传并替换，也可拖放单个文件；上传成功后另行点击「发起匹配」。校验失败保留原策略，上传结果不明时先读取服务端状态核实，核实前暂停新的匹配操作。已有未完成的主动比赛显示「查看当前比赛」。
-
-游戏内通过「玩法 / 对局 / 我的比赛 / 排行榜 / 开发资料」切换，玩法展示规则和本人只读源码。默认绘制静态初始棋盘，不执行策略或创建比赛。发起匹配或打开记录后，左侧自动更新比赛状态，结束后加载暂停的回放；右侧对局展示名次、得分、排位变化与 Tick 诊断。切换导航保留画面、播放进度与速度；参赛区可直接更新策略和再次匹配。地址 `/games/:gameId?match=:matchId` 保留当前比赛，`tab=play` 或 `tab=match` 选择右侧内容，旧 `/matches/:matchId` 链接自动转入对应工作台。在线回放不展示本地 console 日志工具；本地文件按实际日志内容显示，Memory 仅在实时本地调试中提供。账号页可以修改密码，修改后所有设备需要重新登录。
-
-网站顶部导航为「大厅 / 每个游戏一个入口 / 排行榜 / 本地回放」和账号入口，退出登录在账号页；账号页同时显示各游戏排位与 Boss 战绩。大厅 `/` 按目录顺序展示全部玩法（1v1 排位或竞技场）、个人排位、首个 1v1 游戏的前五名和最近比赛。竞技场页在 `/games/<gameId>/arena`，旧地址 `/royale` 重定向到大逃杀竞技场。`/leaderboard?game=:gameId` 按游戏展示排行榜，页面可见时每 10 秒刷新，自己的比赛结束后立即刷新；竞技场游戏显示排位分、冠军次数与平均名次。排行榜可向其他选手发起「挑战」（练习赛，不计分）；服务器安装 Boss 时，参赛区与大厅提供「挑战 Boss」。比赛记录与对局标注练习、Boss 或竞技场，练习与 Boss 显示「不计分」。`/royale` 取目录中第一个声明竞技场的游戏，显示空闲或运行状态（运行中每 3 秒、空闲时每 15 秒刷新）、下一局阵容和保留的最近几局回放；没有注册 renderer 的发行不下载回放。网站只有深色主题，中文使用系统字体，等宽与数字字体随网站自托管。
-
-登录凭据保存在浏览器 localStorage，会话过期后重新登录；退出会撤销当前会话。比赛结果和回放无需登录即可查看，普通玩家的最新代码仅本人可见。上传只替换代码，不会创建比赛；匹配请求在网络失败时复用幂等键，已有未完成的主动比赛会直接打开。
-
-server 和 worker 必须使用同一个 `REPLAYS_DIR`；默认是仓库根目录下的 `data/replays`，相对路径同样以仓库根目录为基准。`GET /api/matches/:matchId/replay` 仅提供已完成比赛的 gzip 文件，不设置 `Content-Encoding`；浏览器和 CLI 自行解压。进行中的比赛每秒轮询，失败按 2/4/8 秒退避，隐藏页面暂停，恢复可见立即查询，终态停止轮询。
-
-运行 `pnpm dev:web`，打开 [http://127.0.0.1:5173/replays](http://127.0.0.1:5173/replays)，选择 CLI 生成的 `.json.gz` 文件。文件在浏览器内读取、校验和重演，不上传，不依赖 API 或数据库。支持圈地地图、倍速播放、单步、时间轴、错误跳转、按玩家和级别查看日志，以及动作、CPU 和执行前观察。播放器与游戏 renderer 显式注册，未注册或校验失败的发行不播放。使用与扩展方式见 [播放器说明](packages/player/README.md)。
-
-## 玩家开发包
-
-游戏页的「复制 AI 安装提示词」引导本地 Agent 完成安装与策略研究。用户预算优先，默认安装后研究 30 分钟：对战官方、历史最佳与不同风格对手，用独立种子验证后交付最佳 bot.js 和研究报告。达到某个胜率不会提前结束；候选与实验记录仅保存在玩家本地，详见[研究流程](docs/designs/local-development.md)。
-
-游戏页提供初始化命令、AI 安装提示词、统一提示词、SDK 说明、官方 bot 和最小模板，可以复制或下载。运行以下命令生成独立 ZIP，并从本地 API 初始化：
-
-```sh
-pnpm build:devkits
-pnpm exec arena init paper ./paper-bot --server http://127.0.0.1:3000
-cd paper-bot
-pnpm install --frozen-lockfile
-pnpm arena dev --bot ./bot.js
-pnpm arena run --bot ./bot.js --seed 42
-pnpm arena replay ./replays/实际文件名.json.gz
-```
-
-`pnpm build:devkits` 按 `configs/devkits.ts` 构建全部开发包，`pnpm build:devkits --game tank` 只生成指定游戏的 ZIP；同一次构建复用通用包归档。产物写到 `data/releases/<gameId>/`，先写完整 ZIP，再原子替换 current.json 元数据。server 使用相同的 DEVKITS_DIR，相对路径以仓库根目录为基准。玩家始终从服务器下载当前最新包，不提供历史发行或修订选择。只改资料无需升级游戏发行，规则与执行契约变化仍需更新 game.release。
-
-已有项目执行 `pnpm arena update`，然后 `pnpm install --frozen-lockfile`。更新复用初始化记录的服务器，保留 bot.js、研究记录、自定义对手和回放；被修改的平台文件先备份到 .arena-backups/。直接解压 ZIP 的项目首次更新需加 `--server <平台地址>`；旧 CLI 可通过 `npx @si-arena/cli@latest update --server <平台地址>` 更新当前目录。
-
-公共研究流程维护在 [RESEARCH.md](packages/development/RESEARCH.md)，各游戏 PROMPT.md 只维护专属内容。网页和 ZIP 通过同一个组装函数获得完整提示词。
-
-开发包 README 使用 [devkit-readme.md](scripts/templates/devkit-readme.md) 生成，说明安装、文件用途、比赛结果、更新和上传。PROMPT 说明游戏规则、策略思路和研究流程；SDK 说明代码接口与错误处理；release.json 记录本地发行和资源限制。
-
-`arena init` 校验发行、ZIP 大小及 SHA-256、内部清单与逐文件摘要，拒绝非空目录与越界路径，不安装依赖或执行代码。安装后运行比赛和回放无需平台 API、数据库或账号。开发包的可视化回放命令输出 loopback URL，在浏览器打开即可，Ctrl+C 停止；`--verify --logs` 仍用于终端校验。实时调试命令 `pnpm arena dev --bot ./bot.js` 同样输出 loopback URL：自动与官方 bot 开局（也可 `--opponent` 指定本地 bot），运行中显示 tick 进度，整场完成后提供逐 tick 动作、日志、错误与 Memory 提交前后对比，并可在页面上同种子或换随机种子重新开局；修改代码后重开即生效，不热替换进行中的比赛。
-
-对外 npm 入口为 `npx @si-arena/cli@latest init paper ./paper-bot --server http(s)://<平台地址>`。CLI 默认连接 `http://127.0.0.1:3000`，平台地址由 `--server` 传入；自托管构建可设置 `SI_ARENA_SERVER_URL` 烧入自己的默认地址，官方发布不设置。游戏和 packages/development 是私有 workspace 包，不公开发布 npm、不参与统一升版；游戏内容由服务器开发包分发。通用工具的公开包采用统一版本（lockstep）：`pnpm change` 记录意图、`pnpm version -r` 统一升版，`pnpm publish:packages` 按拓扑序发布到 `@si-arena` 组织（支持 `--dry-run` 演练与 `--otp` 二次验证）。仓库构建与测试不发布 npm 包。
-
-## 生产部署
-
-`deploy/Dockerfile` 提供 `app`（server/worker 共用）与 `web`（Caddy + SPA）两个镜像 target，`deploy/compose.prod.yaml` 编排 db、一次性迁移、server、worker 与 Caddy（自动 HTTPS）。首次上线（命令在仓库根目录执行）：
-
-```sh
-cp .env.prod.example .env.prod   # 填写 POSTGRES_PASSWORD 与 CADDY_DOMAIN
-docker compose --env-file .env.prod -f deploy/compose.prod.yaml up -d --build
-pnpm build:devkits
-docker compose --env-file .env.prod -f deploy/compose.prod.yaml --profile tools run --rm seed-releases
-```
-
-前置条件、冒烟清单、备份与沙箱加固见 [部署与发布](docs/architecture/deployment.md)。CI（GitHub Actions）在 push/PR 运行 `pnpm check`、`pnpm test:artifacts` 与镜像构建。
-
-统一 CLI 的下载、调试和回放协议见 [本地开发与调试](docs/designs/local-development.md) 与 [分发设计](docs/architecture/distribution-and-development.md)。npm 包统一属于 `@si-arena`，游戏开发包与平台服务通过发行清单保持版本一致。
+常用验证：`pnpm test` 运行源码测试，`pnpm check` 汇总类型、lint、格式与测试；构建和分发变更另运行 `pnpm test:artifacts`。数据库集成测试和 Linux cgroup 测试需要专用环境，默认运行可能跳过，具体设置见开发指南。
 
 ## 文档导航
 
-- [玩法设计索引](docs/designs/README.md)：产品范围、排位、圈地玩法、本地调试体验。
-- [技术架构索引](docs/architecture/README.md)：系统划分、游戏模块、沙箱、tick 与回放、数据与接口、分发。
+| 你要做什么                 | 从这里开始                                                                       |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| 理解产品与参赛方式         | [产品设计](docs/designs/product.md)、[排位与计分](docs/designs/ranked.md)        |
+| 查询玩法                   | [游戏设计索引](docs/designs/README.md)                                           |
+| 运行、修改和验证仓库       | [开发指南](docs/development.md)                                                  |
+| 开发本地策略工具           | [CLI](packages/cli/README.md)、[本地调试设计](docs/designs/local-development.md) |
+| 理解模块、沙箱、回放与 API | [架构索引](docs/architecture/README.md)                                          |
+| 构建玩家开发包             | [分发设计](docs/architecture/distribution-and-development.md)                    |
+| 部署、备份与发布 npm 包    | [部署与发布](docs/architecture/deployment.md)                                    |
 
-先阅读 [产品与参与流程](docs/designs/product.md)，再阅读 [系统架构与技术选型](docs/architecture/overview.md)。
-
-## 设计规范
-
-文档定义玩法、接口和实现约束。每个游戏可在 manifest 中覆盖资源限额；平台默认每 tick 20ms CPU、32MiB isolate 堆、64KiB Memory，圈地继承这些默认值。完整配置与继承规则见 [资源限额](docs/architecture/resource-limits.md)。这些数值是执行契约，验收测试负责检查实现是否满足契约。
+文档按主题维护契约，代码和测试负责实现与验证；历史调研记录只解释当时的决策。文档职责与修改检查见 [开发指南](docs/development.md#文档维护)。

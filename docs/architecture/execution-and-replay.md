@@ -2,11 +2,11 @@
 
 ## 三种运行方式，共用一套规则
 
-| 方式 | 玩家代码 | 规则 step | 输入来源 |
-| --- | --- | --- | --- |
-| 服务端比赛 | 每 tick 沙箱执行 | 执行 | 玩家最新代码与世界观察 |
-| 本地比赛 | 同一沙箱执行，可捕获日志 | 执行 | 本地代码与世界观察 |
-| 回放 | 完全不执行 | 执行 | 初始世界与已记录动作 |
+| 方式       | 玩家代码                 | 规则 step | 输入来源               |
+| ---------- | ------------------------ | --------- | ---------------------- |
+| 服务端比赛 | 每 tick 沙箱执行         | 执行      | 玩家最新代码与世界观察 |
+| 本地比赛   | 同一沙箱执行，可捕获日志 | 执行      | 本地代码与世界观察     |
+| 回放       | 完全不执行               | 执行      | 初始世界与已记录动作   |
 
 回放与任何历史 bot 源码、Memory、CPU 计时无关。代码替换或删除不影响已经保存的比赛回放。
 
@@ -54,38 +54,38 @@
 
 ```ts
 type Replay<State, Action> = {
-  formatVersion: 1
-  matchId: string
+  formatVersion: 1;
+  matchId: string;
   game: {
-    id: string
-    release: string
-    botProtocolVersion: number
-    engineCompatibility: string
-  }
+    id: string;
+    release: string;
+    botProtocolVersion: number;
+    engineCompatibility: string;
+  };
   players: Array<{
-    id: string
-    slot: number
-    name: string
-    official: boolean
-  }>
-  config: JsonObject
-  resolvedLimits: ResourceLimits
-  initialState: State
+    id: string;
+    slot: number;
+    name: string;
+    official: boolean;
+  }>;
+  config: JsonObject;
+  resolvedLimits: ResourceLimits;
+  initialState: State;
   ticks: Array<{
-    tick: number
-    actions: Record<string, Action>
-    errors?: Record<string, ExecutionError>
-    logs?: Record<string, Array<{ level: LogLevel; message: string }>>
-    logsTruncated?: Record<string, true>
-    resources?: Record<string, { cpuUsedUs?: number; memoryBytes?: number }>
-  }>
+    tick: number;
+    actions: Record<string, Action>;
+    errors?: Record<string, ExecutionError>;
+    logs?: Record<string, Array<{ level: LogLevel; message: string }>>;
+    logsTruncated?: Record<string, true>;
+    resources?: Record<string, { cpuUsedUs?: number; memoryBytes?: number }>;
+  }>;
   result: {
-    reason: string
-    completedTicks: number
-    players: Array<{ id: string; rank: number; score: number }>
-  }
-  finalStateHash: string
-}
+    reason: string;
+    completedTicks: number;
+    players: Array<{ id: string; rank: number; score: number }>;
+  };
+  finalStateHash: string;
+};
 ```
 
 `JsonObject`、`ResourceLimits`、`ExecutionError`、`LogLevel` 由 protocol 导出；日志级别为 log、info、warn、error、debug。玩家 ID 对应固定席位，不能通过数组的偶然遍历顺序推断。initialState 必须完整，不能使用空地图或省略字段的展示占位作为正式回放。
@@ -115,7 +115,7 @@ resources 只保存实际取得的测量值，没有测得的数据直接省略�
 - 玩家源码、编译后的玩家字节码和历史代码引用。
 - 玩家 JS 堆与调用栈快照。
 - 每 tick 的完整世界快照。
-- 默认情况下的每 tick Memory 快照。
+- 每 tick Memory 快照；实时本地调试通过独立诊断通道查看，不写入标准回放。
 - 可由规则重新生成的常规动画事件。
 
 错误中的受限文本堆栈不等同于保存执行调用栈对象。
@@ -146,4 +146,4 @@ resources 只保存实际取得的测量值，没有测得的数据直接省略�
 
 worker 在执行期间将动作写入私有临时文件或有界流，不在内存中无限积累整场日志。完成时封装结果、压缩、验证完整性，保存到包含执行标识的不可覆盖候选路径。只有数据库成功提交 completed 并引用该文件后，才对外提供最终回放。候选路径为 `REPLAYS_DIR/candidates/<matchId>-<executionId>.json.gz`，终稿为 `REPLAYS_DIR/<matchId>.json.gz`：结算事务确认执行权后将候选硬链接为终稿，不覆盖任何已有文件。若发布成功后数据库回滚，重试仅接受与本次候选设备号、inode 均相同的已有普通文件，其他已有目标一律拒绝；发布后在支持的平台上同步终稿目录，确保文件引用持久化后再提交数据库。
 
-可靠保存最终回放后，才在数据库事务中提交比赛终态和双方排位。文件与数据库不能使用同一事务，需要通过唯一比赛 ID、确定的文件引用、幂等提交和孤立文件清理处理边界，详见 [数据模型与 API](data-model-and-api.md)。
+可靠保存最终回放后，才在数据库事务中提交比赛终态和对应模式的成绩。文件与数据库不能使用同一事务，需要通过唯一比赛 ID、确定的文件引用、幂等提交和孤立文件清理处理边界，详见 [数据模型与 API](data-model-and-api.md)。
