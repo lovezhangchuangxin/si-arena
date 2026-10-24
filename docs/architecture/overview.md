@@ -2,16 +2,16 @@
 
 ## 技术栈
 
-| 层次 | 选型与职责 |
-| --- | --- |
-| 前端 | Vue 3 + TypeScript + Vite + Vue Router + Tailwind CSS |
-| 包管理 | pnpm 12 workspace，以 pnpm 脚本编排构建，不额外引入 monorepo 框架 |
-| 业务 API | Node.js 26 + TypeScript + Fastify 5 |
-| 数据 | PostgreSQL 18 + Drizzle ORM + node-postgres |
-| 任务 | 首版 PostgreSQL 任务表，短事务领取、租约、幂等终态 |
-| 比赛运行 | 独立 Node.js worker，调用共享引擎和游戏包 |
-| 玩家执行 | isolated-vm（V8 isolate），独立比赛进程 |
-| 可视化 | 通用 Vue 播放器 + 游戏 renderer；首款网格游戏使用 Canvas |
+| 层次     | 选型与职责                                                        |
+| -------- | ----------------------------------------------------------------- |
+| 前端     | Vue 3 + TypeScript + Vite + Vue Router + Tailwind CSS             |
+| 包管理   | pnpm 12 workspace，以 pnpm 脚本编排构建，不额外引入 monorepo 框架 |
+| 业务 API | Node.js 26 + TypeScript + Fastify 5                               |
+| 数据     | PostgreSQL 18 + Drizzle ORM + node-postgres                       |
+| 任务     | 首版 PostgreSQL 任务表，短事务领取、租约、幂等终态                |
+| 比赛运行 | 独立 Node.js worker，调用共享引擎和游戏包                         |
+| 玩家执行 | isolated-vm（V8 isolate），独立比赛进程                           |
+| 可视化   | 通用 Vue 播放器 + 游戏 renderer；首款网格游戏使用 Canvas          |
 
 选择 Fastify 是为了直接实现业务 API，并与前端、引擎、本地工具共享 TS 协议和包。它的插件和 schema 机制用于组织可信服务代码，不把 Fastify 插件等同于游戏插件。[Fastify 文档](https://fastify.dev/docs/latest/Reference/)
 
@@ -79,7 +79,7 @@ flowchart TD
 
 比赛创建时固定规则发行、实际配置和完整 resolvedLimits；worker 只领取本机已安装且资源容量可满足的发行。每位玩家的最新代码在开局时按该冻结协议再次检查。发行标识不等于代码兼容版本，兼容规则见 [游戏模块](monorepo-and-modules.md)。
 
-生产部署可配置 Linux cgroup v2；比赛进程内的 isolate 负责玩家级限额，进程级崩溃为整场系统失败。启用 cgroup 时，比赛执行子进程具有独立资源组，不继承 API/数据库密钥。网络命名空间、只读运行文件系统、低权限用户与 seccomp 属于部署侧配置，runner 本身只负责 cgroup 限制。资源组的 `memory.max` 使用该游戏发行的 `resolvedLimits.runnerMemoryBytes`（平台默认 536870912，即 512MiB），同时设置 `memory.swap.max=0` 和 `pids.max=64`。隔离设施无法建立时拒绝启动比赛执行服务，不回退到无隔离执行。
+线上独立进程内存硬限制要求使用 Linux cgroup v2；当前生产 Compose 默认 `local`，尚未启用，具体差距见 [资源限额](resource-limits.md#进程硬限制的启用条件)。比赛进程内的 isolate 负责玩家级限额，进程级崩溃为整场系统失败。启用 cgroup 时，比赛执行子进程具有独立资源组，不继承 API/数据库密钥。网络命名空间、只读运行文件系统、低权限用户与 seccomp 属于部署侧配置，runner 本身只负责 cgroup 限制。资源组的 `memory.max` 使用该游戏发行的 `resolvedLimits.runnerMemoryBytes`（平台默认 536870912，即 512MiB），同时设置 `memory.swap.max=0` 和 `pids.max=64`。选择 cgroup-v2 后，隔离设施无法建立时拒绝执行该场比赛，不回退到 local。
 
 本地 CLI 复用相同执行代码，但不要求用户安装 PostgreSQL 或运行平台服务。可移植性与操作系统级隔离能力是两回事，不能把本地默认运行方式直接当作线上配置。
 

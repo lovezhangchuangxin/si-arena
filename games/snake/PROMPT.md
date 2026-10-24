@@ -67,7 +67,7 @@ export default function tick({ game, Memory }) {
 
 - 玩家接口 v1（发行与实际限额见 release.json）：源码和 SDK 在环境创建时加载一次，成功 tick 间复用 JavaScript 环境。全局变量、闭包、Map 与 TypedArray 可跨 tick 缓存，都计入堆内存用量。
 - 任一 tick 执行失败后重建环境，全局变量、缓存和 API 模块状态清空，顶层代码重新运行；下一 tick 从上次成功的 JSON `Memory` 恢复。把恢复所需的计划与状态写进 Memory；每 tick 都以新传入的 game 为准。
-- 默认资源限制：源码 256KiB、每 tick CPU 20ms（首次与重建后的 tick 包含玩家模块初始化）、isolate 常驻堆 32MiB、栈 256KiB、Memory 64KiB、动作输出 1KiB；以开发包 release.json 的 `game.resolvedLimits` 为准。
+- 资源预算读取 release.json 的 `game.resolvedLimits`，不要把其他游戏或旧发行的数值当作当前上限。首次及失败重建后的 tick 包含玩家模块初始化 CPU；`stackBytes` 是协议保留字段，不代表按该字节数限制 V8 线程栈。
 - 抛错、超时、非法动作或超限时：该 tick 按沿当前 heading 前进处理，丢弃本次 Memory 修改，保留上次成功的内容，下一 tick 再次调用入口。默认前进不会避险：前方是墙或蛇身时照样出局。
 
 ## 语言限制

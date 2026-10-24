@@ -2,16 +2,15 @@
 
 统一的 `arena` 命令使用引擎、V8 isolate 沙箱（isolated-vm）与可信游戏包执行比赛、保存回放和校验重演，要求 Node.js 26 及以上。
 
-## 在仓库运行
+## 获取玩家开发包
 
-下载初始化不需要本地注册模块：
+玩家不需要克隆仓库。把示例域名替换为平台实际地址；本地部署可用 `http://127.0.0.1:3000`：
 
 ```sh
-pnpm exec arena init paper ./paper-bot --server http://127.0.0.1:3000
-# 指定历史发行，不读取 current 别名
+npx @si-arena/cli@latest init paper ./paper-bot --server https://arena.example.com
 ```
 
-对外入口是 `npx @si-arena/cli@latest init paper ./paper-bot --server http(s)://<平台地址>`（需要已发布的 npm 包）。CLI 默认连接 loopback，平台地址由 `--server` 传入；自托管构建可设置 `SI_ARENA_SERVER_URL` 烧入自己的默认地址。`--server` 允许 HTTP 与 HTTPS，下载仅使用同源的当前开发包地址，不跟随 HTTP 重定向。
+上面的 npx 入口需要已发布的 npm 包。CLI 默认连接 loopback，平台地址由 `--server` 传入；自托管构建可设置 `SI_ARENA_SERVER_URL` 烧入自己的默认地址。`--server` 允许 HTTP 与 HTTPS，下载仅使用同源的当前开发包地址，不跟随 HTTP 重定向。
 
 初始化获取服务器最新开发包，下载最大 32MiB ZIP，校验外部字节数与 SHA-256、内部 release.json 摘要、组件版本/配置及逐文件摘要，最多解压 128MiB、2048 个文件加清单。只写常规文件，不恢复 ZIP 中的符号链接属性；拒绝越界、重复、大小写冲突和 Windows 保留路径。拒绝非空目标目录，校验后在相邻临时目录完整写入并原子移入，失败不留下半个项目。不会自动安装依赖、运行模块或创建线上比赛。
 
@@ -27,6 +26,8 @@ pnpm arena replay ./replays/实际文件名.json.gz --verify --logs
 
 无 `--verify` 的开发包回放命令仅监听 127.0.0.1，输出 URL 并提供固定播放器资源和指定回放，Ctrl+C 停止。`arena dev` 同样仅监听 127.0.0.1 并依赖开发包内置的调试页资源，启动即自动开局，运行不依赖平台服务，网页共享同一播放器和 renderer。
 
+## 在仓库运行
+
 从仓库根目录执行：
 
 ```sh
@@ -36,7 +37,7 @@ pnpm arena run --game paper --bot ./games/paper/bots/official.js --seed 42
 pnpm arena run --game paper --bot ./my-bot.js --opponent ./another-bot.js --matches 20 --seed 42
 ```
 
-根脚本加载 [可信注册配置](../../configs/arena.local.mjs)，已注册圈地与圈地大逃杀，用 `--game` 选择。`--bot` 指定玩家文件；省略 `--opponent` 时补入官方 bot。多人游戏允许重复传入 `--opponent`，指定对手后不再自动补位，人数必须在游戏范围内。
+根脚本加载 [可信注册配置](../../configs/arena.local.mjs)，包含多个游戏，用 `--game` 选择；具体列表以该配置为准。`--bot` 指定玩家文件；对抗游戏省略 `--opponent` 时补入官方 bot，单人游戏只运行自己的代码、不接收对手。多人游戏允许重复传入 `--opponent`，指定对手后不再自动补位，人数必须在游戏范围内。
 
 源码作为 UTF-8 文本读取，先在隔离进程中检查大小和语法，再进入比赛，不作为 Node 模块导入。圈地的玩家入口示例：
 
@@ -51,7 +52,7 @@ export default function tick({ game, Memory }) {
 
 ## 实时调试
 
-`arena dev --bot ./bot.js [--opponent <file>] [--seed <uint32>]` 仅在独立开发包内提供（依赖开发包内置的调试页资源）。命令启动后立即与官方 bot 或 `--opponent` 指定的本地对手开局，stdout 输出 `dev` JSON Line 包含 URL；浏览器打开后：
+`arena dev --bot ./bot.js [--opponent <file>] [--seed <uint32>]` 仅在独立开发包内提供（依赖开发包内置的调试页资源）。命令启动后立即运行本地比赛；对抗游戏加入官方或 `--opponent` 指定的对手，单人游戏独立运行，stdout 输出 `dev` JSON Line 包含 URL；浏览器打开后：
 
 - 运行中显示 tick 进度，整场完成后自动载入完整播放器：时间轴、逐 tick 前进、错误跳转、日志筛选、观察与 CPU。
 - Tick 诊断面板提供所选选手 Memory 提交前后的对比。Memory 只存在于实时会话，不写入回放，记录总量有上限，超限后停止记录并提示。
@@ -62,7 +63,7 @@ dev 会话不保存回放文件；需要文件时用 `arena run` 以相同种子
 
 ## 批量比赛与输出
 
-`--matches` 默认 1，范围 1–1000，顺序执行，每场独立创建沙箱与 Memory。整批开始前读取一次所有源码，修改文件只影响下一次命令调用。`--seed` 默认 42，接受十进制 uint32，后续比赛逐次加一，超过 `4294967295` 回到 0。种子不能消除硬件造成的 CPU 超时差异。
+`--matches` 默认 1，范围 1–1000。默认按 CPU、参赛人数和可用内存限制并发，`--jobs 1` 串行；每场独立创建比赛进程、沙箱与 Memory。结果仍按种子序号输出，执行完成顺序不改变输出顺序。整批开始前读取一次所有源码，修改文件只影响下一次命令调用。`--seed` 默认 42，接受十进制 uint32，后续比赛逐次加一，超过 `4294967295` 回到 0。种子不能消除硬件造成的 CPU 超时差异。
 
 `--out` 指定回放目录，默认当前工作目录的 `./replays`。文件名包含序号、种子与随机 ID，不覆盖已有文件。取消或系统失败时删除未完成回放，保留已完成文件。Ctrl+C / SIGTERM 取消执行并关闭子进程。
 
@@ -70,11 +71,14 @@ dev 会话不保存回放文件；需要文件时用 `arena run` 以相同种子
 
 - `release`：游戏发行、bot 协议、引擎兼容标识、完整限额与参赛者。
 - `match`：种子、结果、最终状态摘要、错误/日志数量与回放绝对路径。
-- `batch`：玩家胜平负与整批错误数量；并列第一计平局，其他第一计胜，其余计负。
+- `match-error`：系统失败的场次与原因，其他场次继续。
+- `batch`：`bot` 的胜平负、整批错误数、`failedMatches` 和实际并发 `jobs`；并列第一计平局，单独第一计胜，其余计负。
+
+单人局正常结束时 rank 固定为 1，因此 batch 的胜率不能反映策略强度；从每条 match 的 `result.players` 汇总 score，比较平均分、低分局和最高分。
 
 玩家 tick 出错不影响成功退出。参数、文件、系统或规则失败时向 stderr 输出 JSON 错误。正常退出码为 0，取消为 130，其他失败为 1；日志与错误字符串经过 JSON 转义。
 
-使用注册发行的完整默认限额。`isolation.processMemoryEnforced: false` 表示本地未启用 Linux cgroup 的进程 RSS 上限，isolate 的 CPU、堆、栈、Memory 和其他协议预算仍执行。正式排位要求见 [沙箱设计](../../docs/architecture/sandbox.md)。
+使用注册发行的完整默认限额。`isolation.processMemoryEnforced: false` 表示本地未启用 Linux cgroup 的进程 RSS 上限，isolate 的 CPU、堆、墙钟、Memory 和其他协议预算仍执行；`stackBytes` 不控制 V8 执行线程的栈大小。正式排位要求见 [沙箱设计](../../docs/architecture/sandbox.md)。
 
 ## 校验回放与查看日志
 
@@ -122,7 +126,7 @@ arena --registry ./arena.config.mjs replay ./replays/match.json.gz --verify
 
 完整开发包约定见 [分发设计](../../docs/architecture/distribution-and-development.md)。本地和网站 `/replays` 共用浏览器播放器，见 [播放器说明](../player/README.md)。
 
-批量运行默认按 CPU、参赛人数与可用内存限制并发，`--jobs 1` 串行。输出仍按种子序号排序。系统失败输出 `match-error`，其他场继续；`batch.failedMatches` 统计失败数，失败批次返回非零退出码。每场独立进程，普通玩家故障只重建对应 isolate，比赛进程崩溃则整场不计分。
+系统失败批次在输出 `batch` 后返回非零退出码；普通玩家 tick 错误仍是正常比赛结果。每场独立进程，普通玩家故障只重建对应 isolate，比赛进程崩溃则整场失败。
 
 ## 更新已有项目
 
