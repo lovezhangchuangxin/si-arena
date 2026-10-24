@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { MatchDetail } from "@si-arena/protocol";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRoute } from "vue-router";
 import { session } from "../auth/session";
 import { kindLabel, matchOutcome, standingChange } from "../games/match-summary";
 import { gameMatchLocation } from "../games/locations";
@@ -8,6 +8,7 @@ import { shortTime } from "../utils/time";
 import AppBadge from "./ui/AppBadge.vue";
 
 defineProps<{ matches: MatchDetail[] }>();
+const route = useRoute();
 const tags = {
   success: "bg-accent text-on-accent",
   danger: "bg-loss text-danger-pale",
@@ -17,7 +18,7 @@ const tags = {
 } as const;
 /** "512 : 388" for finished two-player games, own score first. */
 function scoreLine(match: MatchDetail): string | null {
-  if (match.participants.length !== 2 || !match.result) return null;
+  if (match.kind === "arena" || match.participants.length !== 2 || !match.result) return null;
   const me = session.user?.id;
   const ordered = match.participants.toSorted(
     (a, b) => Number(b.userId === me) - Number(a.userId === me),
@@ -26,6 +27,12 @@ function scoreLine(match: MatchDetail): string | null {
     (seat) => match.result!.players.find((player) => player.id === seat.userId)?.score,
   );
   return scores.every((score) => score !== undefined) ? scores.join(" : ") : null;
+}
+function champions(match: MatchDetail) {
+  return match.participants
+    .filter((player) => player.rank === 1)
+    .map((player) => player.username)
+    .join("、");
 }
 function opponents(match: MatchDetail) {
   const others = match.participants.filter((p) => p.userId !== session.user?.id);
@@ -43,7 +50,11 @@ function changeClass(change: string) {
     <li v-for="match in matches" :key="match.id">
       <RouterLink
         :to="gameMatchLocation(match.gameId, match.id)"
-        class="grid min-h-11 grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-1 py-3 transition hover:bg-subtle sm:grid-cols-[5.25rem_minmax(0,1fr)_auto_1rem] sm:gap-x-4 sm:px-3"
+        :aria-current="route.query.match === match.id ? 'true' : undefined"
+        :class="{
+          'bg-accent-soft ring-1 ring-inset ring-accent-line': route.query.match === match.id,
+        }"
+        class="rounded-control grid min-h-11 grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-1 py-3 transition hover:bg-subtle sm:grid-cols-[5.25rem_minmax(0,1fr)_auto_1rem] sm:gap-x-4 sm:px-3"
       >
         <span
           class="rounded-[0.4375rem] py-1 text-center text-[13px] font-bold"
@@ -52,7 +63,7 @@ function changeClass(change: string) {
         >
         <span class="flex min-w-0 flex-col gap-0.5">
           <span class="flex min-w-0 flex-wrap items-center gap-1.5 font-semibold">
-            <template v-if="match.participants.length > 2"
+            <template v-if="match.kind === 'arena' || match.participants.length > 2"
               >{{ match.participants.length }} 人局</template
             >
             <template v-else>
@@ -72,6 +83,11 @@ function changeClass(change: string) {
               scoreLine(match)
             }}</span>
           </span>
+          <span
+            v-if="match.kind === 'arena' && match.status === 'completed' && champions(match)"
+            class="truncate text-xs text-soft"
+            >冠军 {{ champions(match) }}</span
+          >
           <time class="text-[13px] text-faint" :datetime="match.createdAt">{{
             shortTime(match.createdAt)
           }}</time>

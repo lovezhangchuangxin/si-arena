@@ -76,7 +76,10 @@ defineExpose({ refresh: reload });
         <li
           v-for="p in podium"
           :key="p.userId"
-          class="card flex flex-col gap-2.5 p-5"
+          class="podium-card card flex flex-col gap-2.5 p-5"
+          :style="{
+            '--panel-accent': p.rank === 1 ? '#ffd27d' : p.rank === 2 ? '#75d5ff' : '#bd9aff',
+          }"
           :class="{ 'border-accent-line': p.rank === 1 }"
         >
           <span
@@ -92,7 +95,7 @@ defineExpose({ refresh: reload });
         </li>
       </ol>
       <div class="card overflow-hidden">
-        <table class="w-full text-left text-sm">
+        <table class="leaderboard-table w-full text-left text-sm">
           <caption class="sr-only">
             {{
               game.name

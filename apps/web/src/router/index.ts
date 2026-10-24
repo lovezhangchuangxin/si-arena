@@ -41,9 +41,11 @@ export const router = createRouter({
     { path: "/royale", redirect: "/games/royale/arena" },
     {
       path: "/games/:gameId/arena",
-      component: () => import("../pages/ArenaPage.vue"),
-      props: true,
-      meta: { title: "竞技场" },
+      redirect: (to) => ({
+        path: `/games/${encodeURIComponent(String(to.params.gameId))}`,
+        query: { ...to.query, tab: to.query.match ? "match" : "arena" },
+        hash: to.hash,
+      }),
     },
     {
       path: "/leaderboard",

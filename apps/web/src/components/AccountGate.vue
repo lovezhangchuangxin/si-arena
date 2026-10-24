@@ -16,7 +16,10 @@ const route = useRoute();
     action-label="重新连接"
     @retry="restoreSession"
   />
-  <div v-else-if="!session.user" class="flex flex-wrap items-center justify-between gap-3 p-4">
+  <div
+    v-else-if="!session.user"
+    class="account-gate flex flex-wrap items-center justify-between gap-3 p-4"
+  >
     <p class="text-sm text-soft">尚未登录</p>
     <AppButton variant="primary" :to="{ path: '/login', query: { next: route.fullPath } }"
       >登录参赛</AppButton

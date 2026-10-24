@@ -28,6 +28,9 @@ function draw(state: RoyaleState, events: RoyaleEvent[] = [], erroredPlayers: st
     font: "",
     textAlign: "",
     textBaseline: "",
+    createLinearGradient() {
+      return { addColorStop() {} } as CanvasGradient;
+    },
     save() {},
     restore() {},
     beginPath() {},

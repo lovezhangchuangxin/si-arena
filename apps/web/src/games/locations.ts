@@ -6,7 +6,7 @@ export function gameMatchLocation(gameId: string, matchId?: string) {
   };
 }
 
-/** The shared arena page of a game that declares one in its manifest. */
+/** The unified workspace of a game that declares a shared arena. */
 export function gameArenaPath(gameId: string): string {
-  return `/games/${encodeURIComponent(gameId)}/arena`;
+  return `/games/${encodeURIComponent(gameId)}`;
 }

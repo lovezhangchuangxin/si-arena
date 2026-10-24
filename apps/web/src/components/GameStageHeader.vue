@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import type { GameCatalogEntry } from "@si-arena/protocol";
+import { isSoloGame } from "@si-arena/protocol";
 
 defineProps<{ game: GameCatalogEntry; title: string }>();
 </script>
 
 <template>
-  <header class="flex shrink-0 flex-wrap items-center justify-between gap-3">
-    <div class="flex min-w-0 flex-col gap-1">
-      <p class="text-[13px] text-faint">
-        {{ game.name }} ·
-        {{ game.arena ? "竞技场" : game.maxPlayers === 2 ? "1v1 排位" : "排位" }} ·
-        {{ game.release }} · 接口 v{{ game.botProtocolVersion }}
+  <header class="game-stage-header flex shrink-0 flex-wrap items-center justify-between gap-3">
+    <div class="flex min-w-0 flex-col gap-2">
+      <p class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-faint">
+        <span class="rounded-chip border border-line-strong px-1.5 py-0.5 text-soft">{{
+          game.arena ? "多人竞技场" : isSoloGame(game) ? "单人挑战" : "双人对抗"
+        }}</span>
+        <span v-if="title !== game.name" class="text-soft">{{ game.name }}</span>
+        <span class="hidden font-mono sm:inline">{{ game.release }}</span>
       </p>
       <h1 class="text-xl font-bold break-words sm:text-2xl">{{ title }}</h1>
     </div>

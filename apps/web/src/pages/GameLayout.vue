@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { RouterView, useRoute } from "vue-router";
 import { parseGame } from "../api/contracts";
 import { session } from "../auth/session";
+import { useArena } from "../composables/useArena";
+import ArenaPanel from "../components/ArenaPanel.vue";
 import { useApiResource } from "../composables/useApiResource";
 import AccountGate from "../components/AccountGate.vue";
 import GameEntry from "../components/GameEntry.vue";
@@ -29,11 +31,14 @@ const tab = computed(() => {
     .replace(/^\//, "");
   if (section === "rules") return "play";
   if (section) return section;
+  if (route.query.tab === "arena" && game.value?.arena) return "arena";
   return route.query.tab === "play"
     ? "play"
     : route.query.tab === "match" || selectedMatch.value
       ? "match"
-      : "play";
+      : game.value?.arena
+        ? "arena"
+        : "play";
 });
 const {
   data: game,
@@ -41,6 +46,19 @@ const {
   error,
   reload,
 } = useApiResource(() => `/api/games/${encodeURIComponent(id.value)}`, parseGame);
+const arena = useArena(() => game.value);
+watch(arena.status.data, (current, previous) => {
+  if (!current || !previous) return;
+  const activeEnded = previous.active && previous.active.id !== current.active?.id;
+  // A whole run can finish between polls, without an observed active -> idle transition.
+  const newResult = current.recent.some(
+    (match) => !previous.recent.some((old) => old.id === match.id),
+  );
+  if (activeEnded || newResult) {
+    void entry.value?.refresh();
+    void panel.value?.refresh?.();
+  }
+});
 let observer: ResizeObserver | undefined;
 watch(
   actions,
@@ -62,6 +80,7 @@ onBeforeUnmount(() => observer?.disconnect());
 function settled() {
   void entry.value?.refresh();
   void panel.value?.refresh?.();
+  if (game.value?.arena) void arena.status.reload();
 }
 </script>
 
@@ -83,8 +102,18 @@ function settled() {
         <GamePreview :game="game" />
       </section>
       <aside class="game-sidebar" aria-label="游戏工作台">
-        <GameNavigation :game-id="game.id" :active-tab="tab" />
+        <GameNavigation :game-id="game.id" :active-tab="tab" :arena="!!game.arena" />
         <div class="game-content">
+          <section
+            v-if="game.arena"
+            v-show="tab === 'arena'"
+            id="game-panel-arena"
+            class="game-panel"
+            role="tabpanel"
+            aria-labelledby="game-tab-arena"
+          >
+            <ArenaPanel :game="game" :arena="arena" />
+          </section>
           <section
             v-show="tab === 'play'"
             id="game-panel-play"
@@ -107,7 +136,7 @@ function settled() {
             <div ref="detailsTarget" class="space-y-4" />
           </section>
           <div
-            v-if="tab !== 'play' && tab !== 'match'"
+            v-if="tab !== 'play' && tab !== 'match' && tab !== 'arena'"
             :id="`game-panel-${tab}`"
             class="game-panel"
             role="tabpanel"
@@ -124,7 +153,12 @@ function settled() {
         </div>
         <div id="participate" ref="actions" class="game-actions">
           <AccountGate
-            ><GameEntry ref="entry" :key="`${game.id}:${session.user?.id}`" :game="game" compact
+            ><GameEntry
+              ref="entry"
+              :key="`${game.id}:${session.user?.id}`"
+              :game="game"
+              :arena="arena"
+              compact
           /></AccountGate>
         </div>
       </aside>

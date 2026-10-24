@@ -2,29 +2,19 @@
 import { computed, ref, watch } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import { session } from "../auth/session";
-import { useCatalog } from "../games/catalog";
-import { gameArenaPath } from "../games/locations";
+import GameSwitcher from "./GameSwitcher.vue";
 import AppLogo from "./AppLogo.vue";
 import AppButton from "./ui/AppButton.vue";
 
 defineProps<{ wide?: boolean }>();
 const route = useRoute();
-const catalog = useCatalog();
 const open = ref(false);
 
-const links = computed(() => {
-  const games = catalog.data.value?.games ?? [];
-  const gameId = route.params.gameId;
-  return [
-    { to: "/", label: "大厅", active: route.path === "/" },
-    ...games.map((game) => {
-      const to = game.arena ? gameArenaPath(game.id) : `/games/${encodeURIComponent(game.id)}`;
-      return { to, label: game.name, active: route.path === to || gameId === game.id };
-    }),
-    { to: "/leaderboard", label: "排行榜", active: route.path === "/leaderboard" },
-    { to: "/replays", label: "本地回放", active: route.path === "/replays" },
-  ];
-});
+const links = computed(() => [
+  { to: "/", label: "大厅", active: route.path === "/" },
+  { to: "/leaderboard", label: "排行榜", active: route.path === "/leaderboard" },
+  { to: "/replays", label: "本地回放", active: route.path === "/replays" },
+]);
 const initial = computed(() => [...(session.user?.username ?? "")][0]?.toUpperCase() ?? "");
 
 watch(
@@ -37,16 +27,20 @@ watch(
 
 <template>
   <header
-    class="sticky top-0 z-40 shrink-0 border-b border-line bg-background/90 backdrop-blur-md"
+    class="site-header sticky top-0 z-40 shrink-0 border-b border-line bg-background/90 backdrop-blur-md"
     @keydown.esc="open = false"
   >
     <div
-      class="workspace flex min-h-14 items-center gap-x-7 lg:min-h-16"
+      class="site-header-inner workspace flex min-h-14 items-center gap-x-2 sm:gap-x-5 lg:min-h-16"
       :class="{ 'max-w-[90rem]': wide }"
     >
-      <RouterLink to="/" class="rounded-control text-ink" aria-label="SI Arena 首页"
+      <RouterLink
+        to="/"
+        class="shrink-0 rounded-control text-ink max-sm:[&_span_span]:hidden"
+        aria-label="SI Arena 首页"
         ><AppLogo
       /></RouterLink>
+      <GameSwitcher />
       <nav
         id="site-menu"
         aria-label="主导航"
@@ -57,7 +51,7 @@ watch(
           v-for="link in links"
           :key="link.to"
           :to="link.to"
-          class="flex min-h-11 items-center gap-1.5 rounded-[0.5rem] px-3.5 text-[15px] whitespace-nowrap transition"
+          class="site-nav-link flex min-h-11 items-center gap-1.5 rounded-[0.5rem] px-3.5 text-[15px] whitespace-nowrap transition"
           :class="link.active ? 'bg-subtle font-medium text-ink' : 'text-soft hover:text-ink'"
           :aria-current="link.active ? 'page' : undefined"
           >{{ link.label }}</RouterLink
@@ -67,11 +61,11 @@ watch(
         <RouterLink
           v-if="session.user"
           to="/account"
-          class="flex min-h-11 max-w-44 items-center gap-2.5 rounded-full border border-line py-1.5 pr-1.5 pl-1.5 text-sm text-ink transition hover:border-line-strong sm:pr-3.5"
+          class="site-account flex min-h-11 max-w-44 items-center gap-2.5 rounded-full border border-line py-1.5 pr-1.5 pl-1.5 text-sm text-ink transition hover:border-line-strong sm:pr-3.5"
           :aria-label="`账号：${session.user.username}`"
         >
           <span
-            class="grid size-[30px] shrink-0 place-items-center rounded-full bg-player-0 font-bold text-on-accent"
+            class="user-avatar grid size-[30px] shrink-0 place-items-center rounded-full bg-player-0 font-bold text-on-accent"
             aria-hidden="true"
             >{{ initial }}</span
           >

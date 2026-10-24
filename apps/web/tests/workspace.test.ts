@@ -2,7 +2,7 @@ import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { createMemoryHistory, createRouter, RouterView } from "vue-router";
 import { paperGame } from "@si-arena/game-paper/game";
-import type { GameMeResponse, MatchDetail } from "@si-arena/protocol";
+import type { ArenaStatusResponse, GameMeResponse, MatchDetail } from "@si-arena/protocol";
 import GameLayout from "../src/pages/GameLayout.vue";
 import GamePage from "../src/pages/GamePage.vue";
 import MatchPage from "../src/pages/MatchPage.vue";
@@ -69,7 +69,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-async function setup(url = "/games/paper", me = initial) {
+async function setup(url = "/games/paper", me = initial, arenaStatus?: ArenaStatusResponse) {
   let current = { ...me };
   const matches = new Map([
     ["first", match("first")],
@@ -77,7 +77,13 @@ async function setup(url = "/games/paper", me = initial) {
   ]);
   const fetch = vi.fn(async (input: string, options?: RequestInit) => {
     if (input === "/api/auth/login") return response({ user, token: "a".repeat(43) });
-    if (input === "/api/games/paper") return response(paperGame.manifest);
+    if (input === "/api/games/paper")
+      return response(
+        arenaStatus
+          ? { ...paperGame.manifest, arena: { seats: 2, keepMatches: 3 } }
+          : paperGame.manifest,
+      );
+    if (input === "/api/games/paper/arena" && arenaStatus) return response(arenaStatus);
     if (input === "/api/games/paper/me") return response(current);
     if (input.startsWith("/api/games/paper/me/matches?"))
       return response({ matches: [...matches.values()], total: 2, page: 1, limit: 5 });
@@ -118,6 +124,9 @@ async function setup(url = "/games/paper", me = initial) {
     router,
     fetch,
     matches,
+    updateArena: (value: ArenaStatusResponse) => {
+      arenaStatus = value;
+    },
     updateMe: (value: GameMeResponse) => {
       current = value;
     },
@@ -161,6 +170,16 @@ test("opening history switches inline and navigation restores the selected match
   await wrapper.get("#game-tab-matches").trigger("click");
   await flushPromises();
   expect(wrapper.getComponent(GameMatch).element).toBe(stage);
+  expect(
+    wrapper
+      .get('#game-panel-matches a[href="/games/paper?match=first"]')
+      .attributes("aria-current"),
+  ).toBe("true");
+  expect(
+    wrapper
+      .get('#game-panel-matches a[href="/games/paper?match=second"]')
+      .attributes("aria-current"),
+  ).toBeUndefined();
   await wrapper.get('a[href="/games/paper?match=second"]').trigger("click");
   await flushPromises();
   expect(wrapper.getComponent(GameMatch).text()).toContain("比赛失败");
@@ -349,3 +368,72 @@ test("switching the selected match cancels an unfinished replay download", async
   expect(wrapper.getComponent(GameMatch).text()).toContain("比赛失败");
   expect(wrapper.getComponent(GameMatch).text()).not.toContain("回放");
 });
+
+test("background arena settlements refresh stats without changing the loaded replay", async () => {
+  vi.stubGlobal(
+    "requestAnimationFrame",
+    vi.fn(() => 1),
+  );
+  vi.stubGlobal("cancelAnimationFrame", vi.fn());
+  const { wrapper, router, matches, fetch, updateArena, updateMe } = await setup(
+    "/games/paper",
+    initial,
+    { active: null, lineup: [], recent: [] },
+  );
+  const raw = await replayFixture();
+  vi.spyOn(browserReplay, "readBrowserReplay").mockResolvedValue(raw);
+  matches.set(raw.matchId, { ...match(raw.matchId, "completed"), result: raw.result });
+  const normal = fetch.getMockImplementation()!;
+  fetch.mockImplementation((url, options) =>
+    url.endsWith("/replay") ? Promise.resolve(new Response("gzip fixture")) : normal(url, options),
+  );
+  await router.push(`/games/paper?match=${raw.matchId}`);
+  await flushPromises();
+  await vi.waitFor(() => expect(wrapper.findComponent(ReplayViewer).exists()).toBe(true), {
+    timeout: 10000,
+  });
+  const viewer = wrapper.getComponent(ReplayViewer);
+  const canvas = viewer.get("canvas").element;
+  const session = viewer.props("session");
+  await viewer.get('[aria-label="前进一个 tick"]').trigger("click");
+  await viewer.get('[role="combobox"][aria-label="播放速度"]').trigger("click");
+  await viewer.get('[role="option"][data-value="2"]').trigger("click");
+  await viewer
+    .findAll("button")
+    .find((button) => button.text() === "播放")!
+    .trigger("click");
+  vi.useFakeTimers();
+  // Resume polling with the fake clock, leaving the loaded player's clock untouched.
+  document.dispatchEvent(new Event("visibilitychange"));
+  await flushPromises();
+  const replayReads = () => fetch.mock.calls.filter(([url]) => url.endsWith("/replay")).length;
+  const before = replayReads();
+  updateArena({
+    active: { ...match("other-run", "running"), kind: "arena" },
+    lineup: [],
+    recent: [],
+  });
+  await vi.advanceTimersByTimeAsync(15000);
+  await flushPromises();
+  updateMe({ ...initial, entry: { ...initial.entry, rating: 1032, matchesPlayed: 3 } });
+  updateArena({
+    active: null,
+    lineup: [],
+    // Even when newer retained matches exclude the viewed match, keep its cached replay.
+    recent: [0, 1, 2].map((i) => ({
+      ...match(`new-${i}`, "completed"),
+      kind: "arena",
+      result: raw.result,
+    })),
+  });
+  await vi.advanceTimersByTimeAsync(3000);
+  await flushPromises();
+  expect(wrapper.getComponent(GameEntry).text()).toContain("1032.00");
+  expect(router.currentRoute.value.query.match).toBe(raw.matchId);
+  expect(wrapper.getComponent(ReplayViewer).get("canvas").element).toBe(canvas);
+  expect(wrapper.getComponent(ReplayViewer).props("session")).toBe(session);
+  expect(wrapper.get('[data-testid="tick-count"]').text()).toContain("已完成 1");
+  expect(viewer.get('[role="combobox"][aria-label="播放速度"]').text()).toContain("2×");
+  expect(viewer.findAll("button").some((button) => button.text() === "暂停")).toBe(true);
+  expect(replayReads()).toBe(before);
+}, 20000);

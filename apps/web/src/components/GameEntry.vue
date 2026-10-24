@@ -1,18 +1,25 @@
 <script setup lang="ts">
 import type { GameCatalogEntry } from "@si-arena/protocol";
+import { isSoloGame } from "@si-arena/protocol";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { parseGameMe, parseMatch } from "../api/contracts";
 import { useApiResource } from "../composables/useApiResource";
 import { useMatchRequest } from "../composables/useMatchRequest";
 import { useStrategyUpload } from "../composables/useStrategyUpload";
-import { gameArenaPath, gameMatchLocation } from "../games/locations";
+import type { useArena } from "../composables/useArena";
+import { gameMatchLocation } from "../games/locations";
 import { shortTime } from "../utils/time";
 import AppBadge from "./ui/AppBadge.vue";
 import AppButton from "./ui/AppButton.vue";
 import StateBlock from "./ui/StateBlock.vue";
 
-const props = defineProps<{ game: GameCatalogEntry; compact?: boolean }>();
+const props = defineProps<{
+  game: GameCatalogEntry;
+  compact?: boolean;
+  arena?: ReturnType<typeof useArena>;
+}>();
+const solo = computed(() => isSoloGame(props.game));
 const route = useRoute();
 const router = useRouter();
 let refreshQueued = false;
@@ -39,9 +46,10 @@ const match = useMatchRequest(() => props.game.id);
 const upload = useStrategyUpload({
   game: () => props.game,
   me,
-  blocked: () => match.pending.value,
+  blocked: () => match.pending.value || !!props.arena?.starting.value,
   onAccepted: () => {
     match.error.value = "";
+    if (props.game.arena) void props.arena?.status.reload();
   },
 });
 const { busy, uncertain, fileError, feedback, candidate } = upload;
@@ -54,9 +62,11 @@ watch(
 );
 const fileInput = ref<HTMLInputElement | null>(null);
 const dragging = ref(false);
-const working = computed(() => !!busy.value || match.pending.value);
+const arenaActive = computed(() => props.arena?.status.data.value?.active);
+const arenaStarting = computed(() => !!props.arena?.starting.value);
+const working = computed(() => !!busy.value || match.pending.value || arenaStarting.value);
 const locked = computed(() => working.value || uncertain.value);
-watch([busy, match.pending, uncertain], () => {
+watch([busy, match.pending, uncertain, arenaStarting], () => {
   if (
     !working.value &&
     !uncertain.value &&
@@ -78,7 +88,7 @@ const bossBusy = computed(() => match.pending.value && match.body.value?.boss ==
 
 async function refresh() {
   // A match request refreshes once its POST/navigation has finished.
-  if (match.pending.value) return;
+  if (match.pending.value || arenaStarting.value) return;
   if (busy.value || uncertain.value) {
     refreshQueued = true;
     return;
@@ -111,6 +121,15 @@ function dropFile(event: DragEvent) {
   }
   void upload.read(files[0]!);
 }
+async function startArena() {
+  const arena = props.arena;
+  if (!arena || !data.value?.canMatch || locked.value || arenaActive.value) return;
+  if (await arena.start()) {
+    const run = arena.startedMatch.value;
+    if (run) await router.push(gameMatchLocation(props.game.id, run.id));
+    await refresh();
+  }
+}
 async function startMatch(boss = false) {
   if (data.value?.canMatch && !locked.value && (await match.start(boss ? { boss: true } : {})))
     await refresh();
@@ -125,36 +144,33 @@ defineExpose({ refresh, data });
     v-else-if="data"
     aria-label="我的参赛策略"
     class="flex min-w-0 flex-col gap-3 transition"
-    :class="[
-      compact ? 'px-4 pt-3.5 pb-4 sm:px-5 sm:pb-5' : 'card p-4',
-      { 'bg-accent-soft': dragging },
-    ]"
+    :class="[compact ? 'p-4 sm:px-5' : 'card p-4', { 'bg-accent-soft': dragging }]"
     @dragover.prevent="dragging = true"
     @dragleave.self="dragging = false"
     @drop.prevent="dropFile"
   >
-    <div
-      class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[13px] text-soft"
-      :class="{ 'max-sm:hidden': compact }"
-    >
-      <span v-if="game.arena"
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-soft">
+      <span class="flex items-baseline gap-2">
+        {{ solo ? "历史最高分" : "排位" }}
+        <b class="figure text-xl text-ink">{{
+          solo ? data.entry.bestScore.toLocaleString() : data.entry.rating.toFixed(2)
+        }}</b>
+      </span>
+      <span v-if="solo">已挑战 {{ data.entry.matchesPlayed }} 次</span>
+      <span v-else-if="game.arena"
         >已赛 {{ data.entry.matchesPlayed }} 场 · 冠军 {{ data.entry.wins }} 次</span
       >
       <span v-else
-        >排位
-        <b class="figure text-base text-ink">{{ data.entry.rating.toFixed(2) }}</b>
-        · 已赛 {{ data.entry.matchesPlayed }} 场</span
-      >
-      <span class="font-mono"
-        >{{ data.entry.wins }} 胜 {{ data.entry.draws }} 平 {{ data.entry.losses }} 负</span
+        >{{ data.entry.wins }} 胜 {{ data.entry.draws }} 平 {{ data.entry.losses }} 负 · 已赛
+        {{ data.entry.matchesPlayed }} 场</span
       >
     </div>
     <div
-      class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-control border border-dashed px-3 py-2.5 text-xs"
-      :class="dragging ? 'border-accent' : 'border-line-strong'"
+      class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs"
+      :class="dragging ? 'rounded-control bg-accent-soft p-2 ring-1 ring-accent' : ''"
       aria-live="polite"
     >
-      <span class="text-[13px] text-soft">当前策略</span>
+      <span class="text-soft">当前策略</span>
       <AppBadge v-if="uncertain" tone="warning">上传结果待确认</AppBadge>
       <AppBadge v-else-if="busy">{{
         busy === "read" ? "读取文件中" : busy === "verify" ? "核实上传结果中" : "上传并校验中"
@@ -164,16 +180,31 @@ defineExpose({ refresh, data });
         data.code ? "需要更新" : "尚未上传"
       }}</AppBadge>
       <span v-if="data.code" class="font-mono text-faint"
-        >{{ (data.code.sourceBytes / 1024).toFixed(1) }} KiB ·
-        {{ shortTime(data.code.updatedAt) }}</span
+        >{{ (data.code.sourceBytes / 1024).toFixed(1) }} KiB</span
+      >
+      <time
+        v-if="data.code"
+        :datetime="data.code.updatedAt"
+        class="ml-auto text-faint"
+        :title="`策略更新于 ${shortTime(data.code.updatedAt)}`"
+        >{{ shortTime(data.code.updatedAt) }}</time
       >
       <span v-if="feedback && !busy" class="text-accent">{{ feedback }}</span>
-      <span class="ml-auto hidden text-faint sm:inline" :class="{ 'text-accent': dragging }">{{
-        dragging ? "松开以上传策略" : "可拖入 .js 文件更新"
-      }}</span>
+      <span v-if="dragging" class="text-accent">松开以上传策略</span>
     </div>
     <p v-if="!data.canMatch" class="text-xs text-soft">{{ disabledReason }}</p>
-    <div class="grid grid-cols-2 gap-2.5">
+    <p
+      v-else-if="
+        game.arena &&
+        !arenaActive &&
+        arena?.status.data.value &&
+        arena.status.data.value.lineup.length < game.minPlayers
+      "
+      class="text-xs text-warning"
+    >
+      至少需要 {{ game.minPlayers }} 名可参赛选手，当前阵容人数不足。
+    </p>
+    <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] gap-2.5">
       <input
         ref="fileInput"
         id="strategy-file"
@@ -191,14 +222,30 @@ defineExpose({ refresh, data });
         :loading="!!busy"
         :disabled="locked"
         @click="fileInput?.click()"
+        :title="data.code ? '选择 .js 文件，或拖入文件更新策略' : '选择本地编写的 .js 策略文件'"
         >{{ data.code ? "更新策略" : "上传策略" }}</AppButton
       >
       <AppButton
-        v-if="game.arena"
+        v-if="game.arena && arenaActive"
+        size="lg"
+        variant="primary"
+        :disabled="locked"
+        :to="gameMatchLocation(game.id, arenaActive.id)"
+        >查看当前比赛</AppButton
+      >
+      <AppButton
+        v-else-if="game.arena"
         size="lg"
         :variant="data.code ? 'primary' : 'secondary'"
-        :to="gameArenaPath(game.id)"
-        >前往竞技场</AppButton
+        :loading="arenaStarting"
+        :disabled="
+          !data.canMatch ||
+          locked ||
+          !arena?.status.data.value ||
+          arena.status.data.value.lineup.length < game.minPlayers
+        "
+        @click="startArena"
+        >开一局</AppButton
       >
       <AppButton
         v-else-if="data.activeMatch"
@@ -215,7 +262,7 @@ defineExpose({ refresh, data });
         :loading="match.pending.value && !bossBusy"
         :disabled="!data.canMatch || locked"
         @click="startMatch()"
-        >发起匹配</AppButton
+        >{{ solo ? "开始挑战" : "发起匹配" }}</AppButton
       >
     </div>
     <div
@@ -261,6 +308,9 @@ defineExpose({ refresh, data });
         >刷新参赛状态</AppButton
       >
     </div>
+    <p v-if="game.arena && arena?.error.value" role="alert" class="text-sm text-danger-ink">
+      {{ arena.error.value }}
+    </p>
     <p v-if="match.error.value" role="alert" class="text-sm text-danger-ink">
       {{ match.error.value }}
     </p>

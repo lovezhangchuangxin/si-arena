@@ -19,7 +19,7 @@ const tones = {
 
 <template>
   <span
-    class="inline-flex shrink-0 items-center gap-1 rounded-chip px-1.5 py-0.5 text-xs leading-4 font-bold whitespace-nowrap"
+    class="app-badge inline-flex shrink-0 items-center gap-1 rounded-chip px-1.5 py-0.5 text-xs leading-4 font-bold whitespace-nowrap"
     :class="[tones[tone], mono ? 'font-mono font-normal' : '']"
   >
     <slot />

@@ -28,6 +28,9 @@ function draw(state: TankState, events: TankEvent[] = [], erroredPlayers: string
     font: "",
     textAlign: "",
     textBaseline: "",
+    createLinearGradient() {
+      return { addColorStop() {} } as CanvasGradient;
+    },
     save() {},
     restore() {},
     beginPath() {},

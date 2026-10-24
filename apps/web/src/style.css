@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./lobby.css";
+@import "./arena-theme.css";
 /* Latin display and mono faces are self-hosted; Chinese text uses the system stack. */
 @import "@fontsource/jetbrains-mono/latin-400.css";
 @import "@fontsource/jetbrains-mono/latin-600.css";
@@ -12,23 +14,23 @@
   /* Chakra Petch only for the logo and big numbers. */
   --font-display: "Chakra Petch", "JetBrains Mono", ui-monospace, sans-serif;
 
-  /* Night arena: dark only. */
-  --color-background: #0b0e13;
-  --color-surface: #12161d;
-  --color-subtle: #181d26;
-  --color-board: #0f131a;
-  --color-dock: #0f1319;
-  --color-line: #252c38;
-  --color-line-strong: #323b4a;
-  --color-divider: #1e242e;
-  --color-ink: #e9eef5;
-  --color-soft: #a7b1c0;
-  --color-faint: #7e8898;
-  --color-accent: #c5f04a;
-  --color-accent-strong: #ddfb86;
-  --color-accent-soft: rgb(197 240 74 / 0.14);
-  --color-accent-line: #3a4a1f;
-  --color-on-accent: #0b0e13;
+  /* Shared neon arena palette for the site and local viewers. */
+  --color-background: #080e17;
+  --color-surface: #101c2c;
+  --color-subtle: #17263a;
+  --color-board: #080f1b;
+  --color-dock: #0b1524;
+  --color-line: #273b52;
+  --color-line-strong: #39536e;
+  --color-divider: #203147;
+  --color-ink: #edf4ff;
+  --color-soft: #afbed4;
+  --color-faint: #8a9db8;
+  --color-accent: #8dffa6;
+  --color-accent-strong: #b5ffc6;
+  --color-accent-soft: rgb(141 255 166 / 0.12);
+  --color-accent-line: #315a40;
+  --color-on-accent: #080e17;
   --color-danger: #ff6b5b;
   --color-danger-ink: #ff8a7a;
   --color-danger-soft: #2a1614;
@@ -36,7 +38,7 @@
   --color-danger-pale: #ffd7d2;
   --color-loss: #4a2320;
   --color-even: #2a313d;
-  --color-warning: #ffb020;
+  --color-warning: #ffbf50;
   --color-warning-soft: rgb(255 176 32 / 0.14);
   --radius-card: 1rem;
   --radius-panel: 0.75rem;
@@ -48,11 +50,11 @@
 
 /* Seat colours are also read through var() in inline styles, so they are always emitted. */
 @theme static {
-  --color-player-0: #5b8cff;
-  --color-player-1: #ffb020;
-  --color-player-2: #ff5fa2;
-  --color-player-3: #2ed3b7;
-  --color-player-4: #a880ff;
+  --color-player-0: #58a6ff;
+  --color-player-1: #ffbf50;
+  --color-player-2: #ff79bd;
+  --color-player-3: #43e6be;
+  --color-player-4: #b58aff;
 }
 
 @layer base {
@@ -143,8 +145,8 @@
   /* 大厅与登录页的网格底纹 */
   .grid-backdrop {
     background-image:
-      linear-gradient(#141922 1px, transparent 1px),
-      linear-gradient(90deg, #141922 1px, transparent 1px);
+      linear-gradient(#28446122 1px, transparent 1px),
+      linear-gradient(90deg, #28446122 1px, transparent 1px);
     background-size: 32px 32px;
   }
 }
@@ -186,7 +188,6 @@
   padding: 0.75rem;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
-  background: var(--color-surface);
 }
 .game-canvas {
   position: relative;
@@ -206,15 +207,66 @@
   overflow: hidden;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
-  background: var(--color-surface);
 }
 .game-tabs {
   display: flex;
   flex-shrink: 0;
+  gap: 0.25rem;
   overflow-x: auto;
-  padding-inline: 0.5rem;
+  padding: 0.375rem;
   border-bottom: 1px solid var(--color-line);
   scrollbar-width: none;
+}
+.game-tab {
+  display: flex;
+  min-height: 2.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.game-tab--active {
+  font-weight: 600;
+}
+.game-tabs--arena {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.game-tabs--arena > a {
+  flex: 1;
+  padding-inline: 0.375rem;
+}
+@media (max-width: 639px) {
+  .game-tabs:not(.game-tabs--arena) {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+  }
+  .game-tabs:not(.game-tabs--arena) > a {
+    padding-inline: 0.125rem;
+    font-size: 0.75rem;
+  }
+}
+@media (min-width: 640px) {
+  .game-tabs--arena {
+    display: flex;
+  }
+}
+@media (max-width: 1023px) {
+  .game-stage .game-preview .game-canvas--fit {
+    max-height: min(42dvh, 26rem);
+  }
+}
+@media (max-width: 639px) {
+  .game-stage .game-preview .game-canvas--fit {
+    max-height: min(30dvh, 20rem);
+  }
 }
 .game-content {
   min-width: 0;
@@ -231,9 +283,7 @@
   z-index: 35;
   max-height: 45dvh;
   overflow-y: auto;
-  border-top: 1px solid var(--color-line);
   padding-bottom: env(safe-area-inset-bottom);
-  background: var(--color-dock);
 }
 .game-match-pending {
   position: relative;
@@ -282,7 +332,7 @@
   .game-columns {
     height: 100%;
     min-height: 0;
-    grid-template-columns: minmax(0, 1fr) clamp(24rem, 32vw, 28rem);
+    grid-template-columns: minmax(0, 1fr) clamp(25rem, 34vw, 30rem);
   }
   .game-content {
     position: relative;

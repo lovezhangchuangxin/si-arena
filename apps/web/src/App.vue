@@ -24,7 +24,11 @@ onUnmounted(() => window.removeEventListener("storage", syncSession));
   <a class="skip-link" href="#main-content">跳到主要内容</a>
   <div
     class="app-shell flex min-h-dvh w-full flex-col"
-    :class="{ 'app-shell--game': gameWorkspace, 'grid-backdrop': route.meta.backdrop === true }"
+    :class="{
+      'app-shell--game': gameWorkspace,
+      'app-shell--lobby': route.path === '/',
+      'grid-backdrop': route.meta.backdrop === true,
+    }"
   >
     <AppHeader v-if="!bare" :wide="gameWorkspace" />
     <div

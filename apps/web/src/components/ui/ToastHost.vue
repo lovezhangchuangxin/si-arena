@@ -23,7 +23,7 @@ const live = computed(() => (current.value?.tone === "danger" ? "assertive" : "p
     <Transition name="toast">
       <div
         v-if="current"
-        class="pointer-events-auto flex w-full max-w-[30rem] items-start gap-3 rounded-panel border border-line-strong bg-subtle px-4 py-3 shadow-pop"
+        class="toast-surface pointer-events-auto flex w-full max-w-[30rem] items-start gap-3 rounded-panel border border-line-strong bg-subtle px-4 py-3 shadow-pop"
       >
         <!-- 圆点、关闭图标都放进与正文同样的 24px 行盒里居中，三者才真正对齐 -->
         <span class="flex h-6 shrink-0 items-center" aria-hidden="true">

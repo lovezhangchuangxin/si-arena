@@ -33,6 +33,9 @@ function fakeContext() {
     font: "",
     textAlign: "left",
     textBaseline: "top",
+    createLinearGradient() {
+      return { addColorStop() {} } as CanvasGradient;
+    },
     save() {},
     restore() {},
     fillRect(...args: number[]) {

@@ -4,7 +4,7 @@ import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { session } from "../../auth/session";
 import { useArena } from "../../composables/useArena";
-import { gameArenaPath } from "../../games/locations";
+import { gameArenaPath, gameMatchLocation } from "../../games/locations";
 import { relativeTime } from "../../utils/time";
 import AppButton from "../ui/AppButton.vue";
 
@@ -25,7 +25,12 @@ const lastText = computed(() => {
   return `上一局 ${relativeTime(run.updatedAt)}结束 · 冠军 ${champion || "—"}`;
 });
 async function start() {
-  if (await arena.start()) await router.push(gameArenaPath(props.game.id));
+  if (await arena.start()) {
+    const run = arena.startedMatch.value;
+    await router.push(
+      run ? gameMatchLocation(props.game.id, run.id) : gameArenaPath(props.game.id),
+    );
+  }
 }
 </script>
 
@@ -79,7 +84,7 @@ async function start() {
         @click="start"
         >开一局</AppButton
       >
-      <AppButton :to="gameArenaPath(game.id)">看最近 {{ game.arena?.keepMatches }} 场</AppButton>
+      <AppButton :to="gameArenaPath(game.id)">进入游戏</AppButton>
     </div>
   </article>
 </template>
