@@ -3,12 +3,15 @@ import { computed } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import { moveTabFocus } from "../utils/tablist";
 
-const props = defineProps<{ gameId: string; activeTab: string }>();
+const props = defineProps<{ gameId: string; activeTab: string; arena?: boolean }>();
 const route = useRoute();
 const links = computed(() => {
   const base = `/games/${encodeURIComponent(props.gameId)}`;
   const selected = typeof route.query.match === "string" ? { match: route.query.match } : {};
   return [
+    ...(props.arena
+      ? [{ id: "arena", label: "竞技场", to: { path: base, query: { ...selected, tab: "arena" } } }]
+      : []),
     { id: "play", label: "玩法", to: { path: base, query: { ...selected, tab: "play" } } },
     { id: "match", label: "对局", to: { path: base, query: { ...selected, tab: "match" } } },
     { id: "matches", label: "我的比赛", to: { path: `${base}/matches`, query: selected } },
@@ -19,7 +22,13 @@ const links = computed(() => {
 </script>
 
 <template>
-  <nav class="game-tabs" role="tablist" aria-label="工作台内容" @keydown="moveTabFocus">
+  <nav
+    class="game-tabs"
+    :class="{ 'game-tabs--arena': arena }"
+    role="tablist"
+    aria-label="工作台内容"
+    @keydown="moveTabFocus"
+  >
     <RouterLink
       v-for="link in links"
       :key="link.id"

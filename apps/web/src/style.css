@@ -216,6 +216,19 @@
   border-bottom: 1px solid var(--color-line);
   scrollbar-width: none;
 }
+.game-tabs--arena {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.game-tabs--arena > a {
+  justify-content: center;
+  padding-inline: 0.625rem;
+}
+@media (min-width: 640px) {
+  .game-tabs--arena {
+    display: flex;
+  }
+}
 .game-content {
   min-width: 0;
   min-height: 0;

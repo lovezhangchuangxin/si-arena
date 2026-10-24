@@ -37,28 +37,41 @@ test("an unknown route can return to the lobby through the rendered navigation l
   expect(wrapper.get("a.skip-link").attributes("href")).toBe("#main-content");
 });
 
-test("the header lists every catalog game, arena games by their arena page", async () => {
+test("the header keeps a fixed navigation and searches catalog games in a switcher", async () => {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: "/:pathMatch(.*)*", component: { render: () => h("h1", "页面") } }],
+    routes: [
+      { path: "/games/:gameId/:section?", component: { render: () => h("h1", "页面") } },
+      { path: "/:pathMatch(.*)*", component: {} },
+    ],
   });
-  await router.push("/games/royale/arena");
-  const wrapper = mount(App, { global: { plugins: [router] } });
+  await router.push("/games/royale/development");
+  const wrapper = mount(App, { attachTo: document.body, global: { plugins: [router] } });
   await flushPromises();
   const nav = wrapper.get('nav[aria-label="主导航"]');
-  expect(nav.get('a[href="/games/paper"]').text()).toBe("网格圈地");
-  const royaleLink = nav.get('a[href="/games/royale/arena"]');
-  expect(royaleLink.text()).toBe("圈地大逃杀");
-  expect(royaleLink.attributes("aria-current")).toBe("page");
-  expect(nav.findAll("a").map((link) => link.text())).toStrictEqual([
-    "大厅",
-    "网格圈地",
-    "圈地大逃杀",
-    "排行榜",
-    "本地回放",
-  ]);
+  expect(nav.findAll("a").map((link) => link.text())).toEqual(["大厅", "排行榜", "本地回放"]);
+  const picker = wrapper.get('button[aria-controls="game-directory"]');
+  expect(picker.text()).toBe("圈地大逃杀");
+  expect(wrapper.find("#game-directory").exists()).toBe(false);
+  await picker.trigger("click");
+  expect(picker.attributes("aria-expanded")).toBe("true");
+  expect(document.activeElement).toBe(wrapper.get("#game-search").element);
+  const directory = wrapper.get('nav[aria-label="切换游戏"]');
+  expect(directory.get('a[href="/games/royale"]').attributes("aria-current")).toBe("page");
+  await wrapper.get("#game-search").setValue("PAPER");
+  expect(wrapper.get('nav[aria-label="切换游戏"]').findAll("a")).toHaveLength(1);
+  await wrapper.get("#game-search").setValue("不存在");
+  expect(wrapper.text()).toContain("没有找到匹配的游戏");
+  await wrapper.get("#game-search").trigger("keydown", { key: "Escape" });
+  expect(picker.attributes("aria-expanded")).toBe("false");
+  expect(document.activeElement).toBe(picker.element);
+  await picker.trigger("click");
+  await wrapper.get('#game-directory a[href="/games/paper"]').trigger("click");
+  await flushPromises();
+  expect(router.currentRoute.value.path).toBe("/games/paper");
+  expect(picker.text()).toBe("网格圈地");
+  expect(picker.attributes("aria-expanded")).toBe("false");
   const toggle = wrapper.get('button[aria-controls="site-menu"]');
-  expect(toggle.attributes("aria-expanded")).toBe("false");
   await toggle.trigger("click");
   expect(toggle.attributes("aria-expanded")).toBe("true");
   await nav.get('a[href="/leaderboard"]').trigger("click");

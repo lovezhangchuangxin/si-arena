@@ -52,7 +52,7 @@ const steps = [
   { title: "初始化项目", text: "下载最新开发包并校验" },
   { title: "让 AI 写 bot.js", text: "把统一提示词交给你的 AI" },
   { title: "本地对战调试", text: "和官方 bot 开局、看回放" },
-  { title: "上传并匹配", text: "回到对局页发起排位" },
+  { title: "上传并匹配", text: "在底部上传策略并主动参赛" },
 ];
 const setupPrompt = computed(() => {
   const directory = `./${props.game.id}-bot`;

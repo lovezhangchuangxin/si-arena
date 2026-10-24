@@ -2,29 +2,19 @@
 import { computed, ref, watch } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import { session } from "../auth/session";
-import { useCatalog } from "../games/catalog";
-import { gameArenaPath } from "../games/locations";
+import GameSwitcher from "./GameSwitcher.vue";
 import AppLogo from "./AppLogo.vue";
 import AppButton from "./ui/AppButton.vue";
 
 defineProps<{ wide?: boolean }>();
 const route = useRoute();
-const catalog = useCatalog();
 const open = ref(false);
 
-const links = computed(() => {
-  const games = catalog.data.value?.games ?? [];
-  const gameId = route.params.gameId;
-  return [
-    { to: "/", label: "大厅", active: route.path === "/" },
-    ...games.map((game) => {
-      const to = game.arena ? gameArenaPath(game.id) : `/games/${encodeURIComponent(game.id)}`;
-      return { to, label: game.name, active: route.path === to || gameId === game.id };
-    }),
-    { to: "/leaderboard", label: "排行榜", active: route.path === "/leaderboard" },
-    { to: "/replays", label: "本地回放", active: route.path === "/replays" },
-  ];
-});
+const links = computed(() => [
+  { to: "/", label: "大厅", active: route.path === "/" },
+  { to: "/leaderboard", label: "排行榜", active: route.path === "/leaderboard" },
+  { to: "/replays", label: "本地回放", active: route.path === "/replays" },
+]);
 const initial = computed(() => [...(session.user?.username ?? "")][0]?.toUpperCase() ?? "");
 
 watch(
@@ -41,12 +31,16 @@ watch(
     @keydown.esc="open = false"
   >
     <div
-      class="workspace flex min-h-14 items-center gap-x-7 lg:min-h-16"
+      class="workspace flex min-h-14 items-center gap-x-2 sm:gap-x-5 lg:min-h-16"
       :class="{ 'max-w-[90rem]': wide }"
     >
-      <RouterLink to="/" class="rounded-control text-ink" aria-label="SI Arena 首页"
+      <RouterLink
+        to="/"
+        class="shrink-0 rounded-control text-ink max-sm:[&_span_span]:hidden"
+        aria-label="SI Arena 首页"
         ><AppLogo
       /></RouterLink>
+      <GameSwitcher />
       <nav
         id="site-menu"
         aria-label="主导航"
