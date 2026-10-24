@@ -170,6 +170,16 @@ test("opening history switches inline and navigation restores the selected match
   await wrapper.get("#game-tab-matches").trigger("click");
   await flushPromises();
   expect(wrapper.getComponent(GameMatch).element).toBe(stage);
+  expect(
+    wrapper
+      .get('#game-panel-matches a[href="/games/paper?match=first"]')
+      .attributes("aria-current"),
+  ).toBe("true");
+  expect(
+    wrapper
+      .get('#game-panel-matches a[href="/games/paper?match=second"]')
+      .attributes("aria-current"),
+  ).toBeUndefined();
   await wrapper.get('a[href="/games/paper?match=second"]').trigger("click");
   await flushPromises();
   expect(wrapper.getComponent(GameMatch).text()).toContain("比赛失败");

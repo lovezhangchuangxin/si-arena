@@ -21,7 +21,15 @@ const preview = computed(() => {
     <header
       class="flex shrink-0 flex-wrap items-center justify-between gap-2 px-1 font-mono text-[13px] text-soft"
     >
-      <span>初始画面</span><span>{{ game.minPlayers }} 人 · {{ game.maxTicks }} tick</span>
+      <span>初始画面</span
+      ><span
+        >{{
+          game.minPlayers === game.maxPlayers
+            ? game.maxPlayers
+            : `${game.minPlayers}–${game.maxPlayers}`
+        }}
+        人 · {{ game.maxTicks }} tick</span
+      >
     </header>
     <GameCanvas
       v-if="preview.scene"

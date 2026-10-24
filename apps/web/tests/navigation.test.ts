@@ -79,3 +79,33 @@ test("the header keeps a fixed navigation and searches catalog games in a switch
   expect(toggle.attributes("aria-expanded")).toBe("false");
   expect(nav.get('a[href="/leaderboard"]').attributes("aria-current")).toBe("page");
 });
+
+test("the game search supports keyboard navigation and does not navigate during IME composition", async () => {
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: "/games/:gameId", component: {} },
+      { path: "/:pathMatch(.*)*", component: {} },
+    ],
+  });
+  await router.push("/games/royale");
+  const wrapper = mount(App, { attachTo: document.body, global: { plugins: [router] } });
+  await flushPromises();
+  await wrapper.get('button[aria-controls="game-directory"]').trigger("click");
+  const search = wrapper.get("#game-search");
+  await search.trigger("keydown", { key: "ArrowDown" });
+  const first = wrapper.get('#game-directory a[href="/games/paper"]');
+  const last = wrapper.get('#game-directory a[href="/games/royale"]');
+  expect(document.activeElement).toBe(first.element);
+  await first.trigger("keydown", { key: "ArrowUp" });
+  expect(document.activeElement).toBe(last.element);
+  await last.trigger("keydown", { key: "Escape" });
+  await wrapper.get('button[aria-controls="game-directory"]').trigger("click");
+  await wrapper.get("#game-search").setValue("paper");
+  await wrapper.get("#game-search").trigger("keydown", { key: "Enter", isComposing: true });
+  expect(router.currentRoute.value.path).toBe("/games/royale");
+  await wrapper.get("#game-search").trigger("keydown", { key: "Enter" });
+  await flushPromises();
+  expect(router.currentRoute.value.path).toBe("/games/paper");
+  expect(wrapper.find("#game-directory").exists()).toBe(false);
+});

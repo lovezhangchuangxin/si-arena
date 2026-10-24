@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, watch } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import { moveTabFocus } from "../utils/tablist";
 
@@ -19,6 +19,16 @@ const links = computed(() => {
     { id: "development", label: "开发资料", to: { path: `${base}/development`, query: selected } },
   ];
 });
+watch(
+  () => props.activeTab,
+  () => {
+    void nextTick(() =>
+      document
+        .getElementById(`game-tab-${props.activeTab}`)
+        ?.scrollIntoView?.({ block: "nearest", inline: "nearest" }),
+    );
+  },
+);
 </script>
 
 <template>
@@ -38,11 +48,9 @@ const links = computed(() => {
       :aria-controls="`game-panel-${link.id}`"
       :tabindex="activeTab === link.id ? 0 : -1"
       :to="link.to"
-      class="flex min-h-12 shrink-0 items-center border-b-2 px-3.5 text-sm whitespace-nowrap transition"
+      class="game-tab"
       :class="
-        activeTab === link.id
-          ? 'border-accent font-medium text-ink'
-          : 'border-transparent text-soft hover:text-ink'
+        activeTab === link.id ? 'game-tab--active' : 'text-soft hover:bg-subtle hover:text-ink'
       "
       >{{ link.label }}</RouterLink
     >
