@@ -33,6 +33,9 @@ function draw(
     font: "",
     textAlign: "",
     textBaseline: "",
+    createLinearGradient() {
+      return { addColorStop() {} } as CanvasGradient;
+    },
     save() {},
     restore() {},
     beginPath() {},

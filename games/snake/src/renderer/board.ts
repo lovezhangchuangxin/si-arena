@@ -49,6 +49,19 @@ function drawSegment(
     cellWidth * (1 - 2 * inset),
     cellHeight * (1 - 2 * inset),
   );
+  const gloss = context.createLinearGradient(x, y, x + cellWidth, y + cellHeight);
+  gloss.addColorStop(0, "#FFFFFF66");
+  gloss.addColorStop(0.45, "#FFFFFF00");
+  gloss.addColorStop(1, "#001E4D88");
+  const color = context.fillStyle;
+  context.fillStyle = gloss;
+  context.fillRect(
+    x + cellWidth * inset,
+    y + cellHeight * inset,
+    cellWidth * (1 - 2 * inset),
+    cellHeight * (1 - 2 * inset),
+  );
+  context.fillStyle = color;
 }
 
 function drawCross(
@@ -102,6 +115,13 @@ export function drawSnakeBoard(
   context.globalAlpha = 1;
   context.fillStyle = SNAKE_PALETTE.ground;
   context.fillRect(0, 0, width, height);
+  const surface = context.createLinearGradient(0, 0, width, height);
+  surface.addColorStop(0, "#12273b99");
+  surface.addColorStop(0.5, "#07101b00");
+  surface.addColorStop(1, "#17263f66");
+  context.fillStyle = surface;
+  context.fillRect(0, 0, width, height);
+
   context.strokeStyle = SNAKE_PALETTE.grid;
   context.lineWidth = 0.5;
   context.beginPath();
@@ -115,6 +135,8 @@ export function drawSnakeBoard(
   }
   context.stroke();
   context.fillStyle = SNAKE_PALETTE.food;
+  context.shadowColor = SNAKE_PALETTE.food;
+  context.shadowBlur = Math.min(16, span);
   for (const food of state.food) {
     context.beginPath();
     context.arc(
@@ -126,6 +148,7 @@ export function drawSnakeBoard(
     );
     context.fill();
   }
+  context.shadowBlur = 0;
   const headPoints = new Map<string, Point>();
   for (const snake of state.snakes) {
     if (snake.death) continue;
@@ -160,8 +183,11 @@ export function drawSnakeBoard(
       y = gridY * cellHeight;
     headPoints.set(snake.id, { x, y });
     context.globalAlpha = 1;
+    context.shadowColor = color;
+    context.shadowBlur = Math.min(16, span);
     context.fillStyle = color;
     drawSegment(context, x, y, cellWidth, cellHeight, 0.06);
+    context.shadowBlur = 0;
     context.strokeStyle = SNAKE_PALETTE.headRing;
     context.lineWidth = Math.max(1, span / 10);
     context.beginPath();
@@ -213,5 +239,9 @@ export function drawSnakeBoard(
     }
   }
   context.globalAlpha = 1;
+  context.shadowBlur = 0;
+  context.strokeStyle = "#62b4d755";
+  context.lineWidth = 1;
+  context.strokeRect(0.5, 0.5, width - 1, height - 1);
   context.restore();
 }

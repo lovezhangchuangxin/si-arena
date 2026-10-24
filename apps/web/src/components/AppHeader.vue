@@ -27,11 +27,11 @@ watch(
 
 <template>
   <header
-    class="sticky top-0 z-40 shrink-0 border-b border-line bg-background/90 backdrop-blur-md"
+    class="site-header sticky top-0 z-40 shrink-0 border-b border-line bg-background/90 backdrop-blur-md"
     @keydown.esc="open = false"
   >
     <div
-      class="workspace flex min-h-14 items-center gap-x-2 sm:gap-x-5 lg:min-h-16"
+      class="site-header-inner workspace flex min-h-14 items-center gap-x-2 sm:gap-x-5 lg:min-h-16"
       :class="{ 'max-w-[90rem]': wide }"
     >
       <RouterLink
@@ -51,7 +51,7 @@ watch(
           v-for="link in links"
           :key="link.to"
           :to="link.to"
-          class="flex min-h-11 items-center gap-1.5 rounded-[0.5rem] px-3.5 text-[15px] whitespace-nowrap transition"
+          class="site-nav-link flex min-h-11 items-center gap-1.5 rounded-[0.5rem] px-3.5 text-[15px] whitespace-nowrap transition"
           :class="link.active ? 'bg-subtle font-medium text-ink' : 'text-soft hover:text-ink'"
           :aria-current="link.active ? 'page' : undefined"
           >{{ link.label }}</RouterLink
@@ -61,11 +61,11 @@ watch(
         <RouterLink
           v-if="session.user"
           to="/account"
-          class="flex min-h-11 max-w-44 items-center gap-2.5 rounded-full border border-line py-1.5 pr-1.5 pl-1.5 text-sm text-ink transition hover:border-line-strong sm:pr-3.5"
+          class="site-account flex min-h-11 max-w-44 items-center gap-2.5 rounded-full border border-line py-1.5 pr-1.5 pl-1.5 text-sm text-ink transition hover:border-line-strong sm:pr-3.5"
           :aria-label="`账号：${session.user.username}`"
         >
           <span
-            class="grid size-[30px] shrink-0 place-items-center rounded-full bg-player-0 font-bold text-on-accent"
+            class="user-avatar grid size-[30px] shrink-0 place-items-center rounded-full bg-player-0 font-bold text-on-accent"
             aria-hidden="true"
             >{{ initial }}</span
           >

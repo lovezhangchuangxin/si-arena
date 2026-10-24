@@ -62,6 +62,13 @@ export function drawTankBoard(
   context.globalAlpha = 1;
   context.fillStyle = TANK_PALETTE.ground;
   context.fillRect(0, 0, width, height);
+  const surface = context.createLinearGradient(0, 0, width, height);
+  surface.addColorStop(0, "#12273b99");
+  surface.addColorStop(0.5, "#07101b00");
+  surface.addColorStop(1, "#17263f66");
+  context.fillStyle = surface;
+  context.fillRect(0, 0, width, height);
+
   for (let index = 0; index < state.cells.length; index++) {
     const cell = state.cells[index]!;
     if (cell === 0) continue;
@@ -70,6 +77,11 @@ export function drawTankBoard(
     if (cell === 1) {
       context.fillStyle = TANK_PALETTE.brick;
       context.fillRect(x, y, cellWidth, cellHeight);
+      const ceramic = context.createLinearGradient(x, y, x, y + cellHeight);
+      ceramic.addColorStop(0, "#F0A26B88");
+      ceramic.addColorStop(1, "#22172866");
+      context.fillStyle = ceramic;
+      context.fillRect(x + 0.5, y + 0.5, cellWidth - 1, cellHeight - 1);
       context.strokeStyle = TANK_PALETTE.mortar;
       context.lineWidth = Math.max(1, span * 0.06);
       context.beginPath();
@@ -135,12 +147,39 @@ export function drawTankBoard(
     tankPoints.set(tank.id, { x, y });
     const color = TANK_PALETTE.players[tank.slot]!;
     const inset = span * 0.14;
+    const [dx, dy] = DELTAS[tank.facing];
+    // Track pairs follow the tank's facing, with visible treads at large scales.
+    context.fillStyle = "#25384E";
+    for (const offset of [0.06, 0.76]) {
+      if (dx === 0)
+        context.fillRect(
+          x + cellWidth * offset,
+          y + cellHeight * 0.12,
+          cellWidth * 0.18,
+          cellHeight * 0.76,
+        );
+      else
+        context.fillRect(
+          x + cellWidth * 0.12,
+          y + cellHeight * offset,
+          cellWidth * 0.76,
+          cellHeight * 0.18,
+        );
+    }
+    context.shadowColor = color;
+    context.shadowBlur = Math.min(16, span * 0.8);
     // Body: a rounded square built from a cross of two rectangles.
     context.fillStyle = color;
     context.fillRect(x + inset, y + inset * 1.6, cellWidth - 2 * inset, cellHeight - 3.2 * inset);
     context.fillRect(x + inset * 1.6, y + inset, cellWidth - 3.2 * inset, cellHeight - 2 * inset);
+    context.shadowBlur = 0;
+    const armour = context.createLinearGradient(x, y, x + cellWidth, y + cellHeight);
+    armour.addColorStop(0, "#D9F5FF99");
+    armour.addColorStop(0.5, "#FFFFFF00");
+    armour.addColorStop(1, "#041C4B88");
+    context.fillStyle = armour;
+    context.fillRect(x + inset * 1.6, y + inset, cellWidth - 3.2 * inset, cellHeight - 2 * inset);
     // Barrel from the centre towards the facing edge.
-    const [dx, dy] = DELTAS[tank.facing];
     const centreX = x + cellWidth / 2,
       centreY = y + cellHeight / 2;
     const barrelWidth = Math.max(2, span * 0.16);
@@ -176,10 +215,19 @@ export function drawTankBoard(
     const [dx, dy] = DELTAS[bullet.direction];
     const centreX = (bullet.position.x + 0.5 - dx * slide) * cellWidth,
       centreY = (bullet.position.y + 0.5 - dy * slide) * cellHeight;
+    context.shadowColor = TANK_PALETTE.players[bullet.owner]!;
+    context.shadowBlur = Math.min(20, span);
+    context.strokeStyle = TANK_PALETTE.players[bullet.owner]!;
+    context.lineWidth = Math.max(1, span * 0.1);
+    context.beginPath();
+    context.moveTo(centreX - dx * span * 0.7, centreY - dy * span * 0.7);
+    context.lineTo(centreX, centreY);
+    context.stroke();
     context.beginPath();
     context.arc(centreX, centreY, Math.max(1.5, span * 0.12), 0, Math.PI * 2);
     context.fill();
   }
+  context.shadowBlur = 0;
   if (showMarks) {
     for (const event of events) {
       if (event.type === "hit" || event.type === "death") {
@@ -241,5 +289,9 @@ export function drawTankBoard(
     }
   }
   context.globalAlpha = 1;
+  context.shadowBlur = 0;
+  context.strokeStyle = "#62b4d755";
+  context.lineWidth = 1;
+  context.strokeRect(0.5, 0.5, width - 1, height - 1);
   context.restore();
 }

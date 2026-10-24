@@ -25,6 +25,11 @@ function draw(
 ) {
   const calls: Call[] = [];
   const context = {
+    save() {},
+    restore() {},
+    createLinearGradient() {
+      return { addColorStop() {} } as CanvasGradient;
+    },
     fillStyle: "",
     strokeStyle: "",
     lineWidth: 1,

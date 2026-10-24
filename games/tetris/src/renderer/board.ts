@@ -46,7 +46,14 @@ export function drawTetrisBoard(
   const cellWidth = boardWidth / state.width;
   const cellHeight = height / state.height;
 
+  context.save();
   context.fillStyle = PALETTE.ground;
+  context.fillRect(0, 0, width, height);
+  const surface = context.createLinearGradient(0, 0, width, height);
+  surface.addColorStop(0, "#12273b99");
+  surface.addColorStop(0.5, "#07101b00");
+  surface.addColorStop(1, "#17263f66");
+  context.fillStyle = surface;
   context.fillRect(0, 0, width, height);
 
   // Playfield grid.
@@ -67,6 +74,30 @@ export function drawTetrisBoard(
     context.globalAlpha = alpha;
     context.fillStyle = color;
     context.fillRect(
+      x * cellWidth + cellWidth * inset,
+      y * cellHeight + cellHeight * inset,
+      cellWidth * (1 - 2 * inset),
+      cellHeight * (1 - 2 * inset),
+    );
+    const glass = context.createLinearGradient(
+      x * cellWidth,
+      y * cellHeight,
+      (x + 1) * cellWidth,
+      (y + 1) * cellHeight,
+    );
+    glass.addColorStop(0, "#FFFFFF77");
+    glass.addColorStop(0.35, "#FFFFFF00");
+    glass.addColorStop(1, "#02193699");
+    context.fillStyle = glass;
+    context.fillRect(
+      x * cellWidth + cellWidth * inset,
+      y * cellHeight + cellHeight * inset,
+      cellWidth * (1 - 2 * inset),
+      cellHeight * (1 - 2 * inset),
+    );
+    context.strokeStyle = color;
+    context.lineWidth = Math.max(0.6, cellWidth * 0.04);
+    context.strokeRect(
       x * cellWidth + cellWidth * inset,
       y * cellHeight + cellHeight * inset,
       cellWidth * (1 - 2 * inset),
@@ -116,7 +147,10 @@ export function drawTetrisBoard(
     for (const [dx, dy] of ghostCells) {
       const x = state.piece.x + dx;
       const y = state.piece.y + dy;
+      context.shadowColor = PALETTE.pieces[state.piece.type - 1]!;
+      context.shadowBlur = Math.min(16, cellWidth * 0.8);
       drawCell(x, y, PALETTE.pieces[state.piece.type - 1]!);
+      context.shadowBlur = 0;
       context.strokeStyle = PALETTE.activeRing;
       context.globalAlpha = 0.5;
       context.strokeRect(
@@ -150,10 +184,19 @@ export function drawTetrisBoard(
     context.globalAlpha = 1;
   }
 
-  // Side panel: next piece, score, lines, level, gravity.
+  // Instrument panels remain part of the same canvas on every surface.
   const unit = panelWidth / 5;
+  context.fillStyle = "#0D1A2D";
+  context.fillRect(panelX, 0, panelWidth, height);
+  context.strokeStyle = "#42668F88";
+  context.lineWidth = 1;
+  context.strokeRect(0.5, 0.5, boardWidth - 1, height - 1);
+  context.strokeRect(panelX + 0.5, 0.5, panelWidth - 1, unit * 3);
+  context.fillStyle = "#65D9FF";
+  context.fillRect(panelX, 0, panelWidth * 0.28, Math.max(1, height * 0.003));
+  context.textAlign = "left";
   context.fillStyle = PALETTE.panelInk;
-  context.font = `bold ${Math.max(10, unit * 0.55)}px "JetBrains Mono", monospace`;
+  context.font = `bold ${Math.max(5, unit * 0.55)}px "JetBrains Mono", monospace`;
   context.textBaseline = "top";
   context.fillText("NEXT", panelX, unit * 0.2);
   const nextType = state.queue[0]!;
@@ -174,6 +217,13 @@ export function drawTetrisBoard(
       unit * 0.92,
       unit * 0.92,
     );
+    context.strokeStyle = "#EBDEFF88";
+    context.strokeRect(
+      panelX + (dx + nextOffsetX) * unit,
+      unit * 1.1 + dy * unit,
+      unit * 0.92,
+      unit * 0.92,
+    );
   }
   const figures: Array<[string, string]> = [
     ["SCORE", String(state.score)],
@@ -182,12 +232,20 @@ export function drawTetrisBoard(
     ["FALL", `${fallInterval(state.level)}t`],
   ];
   figures.forEach(([label, value], index) => {
-    const y = unit * (3.5 + index * 0.85);
+    const y = unit * (3.6 + index * 1.6);
+    context.fillStyle = "#162840";
+    context.fillRect(panelX + unit * 0.2, y - unit * 0.15, panelWidth - unit * 0.4, 1);
     context.fillStyle = PALETTE.panelInk;
-    context.font = `bold ${Math.max(9, unit * 0.42)}px "JetBrains Mono", monospace`;
+    context.font = `bold ${Math.max(4, unit * 0.55)}px "JetBrains Mono", monospace`;
     context.fillText(label, panelX, y);
     context.fillStyle = "#F4F7FB";
-    context.font = `bold ${Math.max(11, unit * 0.6)}px "JetBrains Mono", monospace`;
-    context.fillText(value, panelX, y + unit * 0.42);
+    context.font = `bold ${Math.max(5, unit * 0.8)}px "JetBrains Mono", monospace`;
+    context.fillText(value, panelX, y + unit * 0.7);
   });
+  context.globalAlpha = 1;
+  context.shadowBlur = 0;
+  context.strokeStyle = "#62b4d755";
+  context.lineWidth = 1;
+  context.strokeRect(0.5, 0.5, width - 1, height - 1);
+  context.restore();
 }

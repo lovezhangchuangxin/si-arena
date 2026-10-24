@@ -110,11 +110,26 @@ export function drawRoyaleBoard(
   context.fillRect(0, 0, width, height);
   context.fillStyle = ROYALE_PALETTE.ground;
   context.fillRect(zone.x, zone.y, zone.width, zone.height);
+  const surface = context.createLinearGradient(0, 0, width, height);
+  surface.addColorStop(0, "#12273b99");
+  surface.addColorStop(0.5, "#07101b00");
+  surface.addColorStop(1, "#17263f66");
+  context.fillStyle = surface;
+  context.fillRect(0, 0, width, height);
+
   context.globalAlpha = ROYALE_PALETTE.territoryAlpha;
+  // One continuous colour wash per seat keeps large territories luminous without tile seams.
+  const territoryFills = ROYALE_PALETTE.players.map((color) => {
+    const fill = context.createLinearGradient(0, 0, width * 0.35, height);
+    fill.addColorStop(0, color);
+    fill.addColorStop(0.55, color);
+    fill.addColorStop(1, `${color}B3`);
+    return fill;
+  });
   for (let index = 0; index < state.territory.length; index++) {
     const owner = state.territory[index]!;
     if (owner < 0) continue;
-    context.fillStyle = ROYALE_PALETTE.players[owner]!;
+    context.fillStyle = territoryFills[owner]!;
     context.fillRect(
       (index % state.width) * cellWidth,
       Math.floor(index / state.width) * cellHeight,
@@ -122,7 +137,28 @@ export function drawRoyaleBoard(
       cellHeight,
     );
   }
+
+  // A continuous luminous border separates owned land from the neutral grid.
+  for (let index = 0; index < state.territory.length; index++) {
+    const owner = state.territory[index]!;
+    if (owner < 0) continue;
+    const gx = index % state.width,
+      gy = Math.floor(index / state.width);
+    const x = gx * cellWidth,
+      y = gy * cellHeight;
+    context.globalAlpha = 0.7;
+    context.fillStyle = ROYALE_PALETTE.players[owner]!;
+    const edge = Math.max(0.6, span * 0.06);
+    if (gx === 0 || state.territory[index - 1] !== owner) context.fillRect(x, y, edge, cellHeight);
+    if (gx === state.width - 1 || state.territory[index + 1] !== owner)
+      context.fillRect(x + cellWidth - edge, y, edge, cellHeight);
+    if (gy === 0 || state.territory[index - state.width] !== owner)
+      context.fillRect(x, y, cellWidth, edge);
+    if (gy === state.height - 1 || state.territory[index + state.width] !== owner)
+      context.fillRect(x, y + cellHeight - edge, cellWidth, edge);
+  }
   context.globalAlpha = 1;
+  context.globalAlpha = 0.5;
   context.strokeStyle = ROYALE_PALETTE.grid;
   context.lineWidth = 0.5;
   context.beginPath();
@@ -146,6 +182,28 @@ export function drawRoyaleBoard(
       cellWidth * 0.64,
       cellHeight * 0.64,
     );
+  }
+
+  context.globalAlpha = 1;
+  for (let index = 0; index < state.trails.length; index++) {
+    const owner = state.trails[index]!;
+    if (owner < 0) continue;
+    const x = (index % state.width) * cellWidth,
+      y = Math.floor(index / state.width) * cellHeight;
+    context.shadowColor = ROYALE_PALETTE.players[owner]!;
+    context.shadowBlur = Math.min(12, span * 0.8);
+    context.fillStyle = ROYALE_PALETTE.players[owner]!;
+    context.fillRect(x + cellWidth * 0.2, y + cellHeight * 0.2, cellWidth * 0.6, cellHeight * 0.6);
+    context.shadowBlur = 0;
+    context.fillStyle = "#E8F8FF";
+    context.globalAlpha = 0.5;
+    context.fillRect(
+      x + cellWidth * 0.24,
+      y + cellHeight * 0.24,
+      cellWidth * 0.5,
+      Math.max(0.5, cellHeight * 0.08),
+    );
+    context.globalAlpha = 1;
   }
   context.globalAlpha = 1;
   // A ring that just closed fades out from where the zone used to end.
@@ -197,8 +255,19 @@ export function drawRoyaleBoard(
     const x = gridX * cellWidth,
       y = gridY * cellHeight;
     headPoints.set(player.id, { x, y });
+
+    context.shadowColor = ROYALE_PALETTE.players[player.slot]!;
+    context.shadowBlur = Math.min(18, span * 1.2);
     context.fillStyle = ROYALE_PALETTE.players[player.slot]!;
     context.fillRect(x, y, cellWidth, cellHeight);
+    context.shadowBlur = 0;
+    const glass = context.createLinearGradient(x, y, x + cellWidth, y + cellHeight);
+    glass.addColorStop(0, "#FFFFFF88");
+    glass.addColorStop(0.45, "#FFFFFF00");
+    glass.addColorStop(1, "#021B4B99");
+    context.fillStyle = glass;
+    context.fillRect(x, y, cellWidth, cellHeight);
+
     context.strokeStyle = ROYALE_PALETTE.headRing;
     context.lineWidth = Math.max(1, cellWidth / 8);
     context.strokeRect(x + 0.5, y + 0.5, cellWidth - 1, cellHeight - 1);
@@ -206,7 +275,22 @@ export function drawRoyaleBoard(
     context.font = `bold ${Math.max(7, cellHeight * 0.7)}px monospace`;
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.fillText(String(player.slot + 1), x + cellWidth / 2, y + cellHeight / 2);
+    if (span >= 8) context.fillText(String(player.slot + 1), x + cellWidth / 2, y + cellHeight / 2);
+    else {
+      // Tiny views use two visor pixels instead of a numeral wider than the cell.
+      context.fillRect(
+        x + cellWidth * 0.23,
+        y + cellHeight * 0.28,
+        cellWidth * 0.16,
+        cellHeight * 0.22,
+      );
+      context.fillRect(
+        x + cellWidth * 0.61,
+        y + cellHeight * 0.28,
+        cellWidth * 0.16,
+        cellHeight * 0.22,
+      );
+    }
   }
   if (showMarks) {
     for (const event of events) {
@@ -257,5 +341,9 @@ export function drawRoyaleBoard(
     }
   }
   context.globalAlpha = 1;
+  context.shadowBlur = 0;
+  context.strokeStyle = "#62b4d755";
+  context.lineWidth = 1;
+  context.strokeRect(0.5, 0.5, width - 1, height - 1);
   context.restore();
 }

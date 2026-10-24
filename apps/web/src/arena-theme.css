@@ -1,0 +1,318 @@
+/* Shared visual language. Layout and game-specific artwork stay with their owners. */
+.app-shell {
+  background:
+    radial-gradient(ellipse at 8% 0, #163a553d, transparent 48rem),
+    radial-gradient(ellipse at 100% 80%, #25234b26, transparent 48rem), var(--color-background);
+}
+.site-header {
+  background: rgb(12 20 33 / 94%);
+  border-color: #293f58;
+  box-shadow: 0 1px 24px #0003;
+}
+.site-header-inner {
+  min-height: 4.25rem;
+}
+.site-nav-link {
+  position: relative;
+  background: transparent;
+}
+.site-nav-link[aria-current="page"] {
+  color: var(--color-ink);
+}
+.site-nav-link[aria-current="page"]::after {
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0;
+  left: 0.65rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 12px #8dffa680;
+  content: "";
+}
+.site-account {
+  background: linear-gradient(130deg, #1b2a40, #101a29);
+}
+.user-avatar {
+  border: 1px solid #76d6cb66;
+  background: radial-gradient(circle at 30% 20%, #24515e, #132337 80%);
+  color: #a4ffbd;
+  box-shadow:
+    inset 0 1px 0 #c5ffff26,
+    0 0 18px #60e6ae12;
+}
+.card,
+.game-preview,
+.game-sidebar {
+  background: linear-gradient(140deg, #15253aeb, #0e1828 65%);
+  box-shadow:
+    inset 0 1px 0 #a3d9ff0b,
+    0 10px 30px #0002;
+}
+.tile {
+  background: linear-gradient(140deg, #1c3047, #142238);
+  box-shadow: inset 0 1px 0 #b4e4ff0c;
+}
+.figure.text-accent {
+  text-shadow: 0 0 20px #8dffa61f;
+}
+.page-header {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--color-divider);
+}
+.page-header h1,
+.game-stage-header h1 {
+  padding-left: 0.8rem;
+  border-left: 3px solid var(--color-accent);
+  text-shadow: 0 2px 20px #77c9ff15;
+}
+.page-header h1 {
+  border-image: linear-gradient(#8dffa6, #60cfff) 1;
+}
+.app-button {
+  transition:
+    background-color 160ms,
+    border-color 160ms,
+    box-shadow 160ms,
+    color 160ms;
+}
+.app-button--primary {
+  border: 1px solid #b8ffc08c;
+  background: linear-gradient(115deg, #80ffc1, #a0ff8b);
+  color: #09251a;
+  box-shadow:
+    inset 0 1px 0 #effff950,
+    0 0 18px #85ff9f24;
+}
+.app-button--primary:hover {
+  background: linear-gradient(115deg, #a8ffd4, #c0ffa8);
+  box-shadow:
+    inset 0 1px 0 #effff950,
+    0 0 24px #85ff9f40;
+}
+.app-button--secondary {
+  background: linear-gradient(135deg, #18293d, #101b2b);
+  box-shadow: inset 0 1px 0 #c3e3ff08;
+}
+.app-button--secondary:hover {
+  border-color: #6b9bb6;
+  background: #1a3045;
+}
+.app-button--danger {
+  background: linear-gradient(135deg, #3b242c, #261a25);
+  box-shadow: inset 0 1px 0 #ffb29a0a;
+}
+.app-button:disabled,
+.app-button[aria-disabled="true"] {
+  box-shadow: none;
+}
+.input,
+.app-select-trigger {
+  background-image: linear-gradient(140deg, #0b1727, #101e30);
+  box-shadow: inset 0 1px 3px #0003;
+}
+.input:focus,
+.app-select-trigger:focus-visible {
+  box-shadow:
+    0 0 0 3px #8dffa61a,
+    inset 0 1px 3px #0003;
+}
+.input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+.app-select-menu,
+.toast-surface,
+#game-directory {
+  background: linear-gradient(140deg, #1b2d43, #101c2e);
+  box-shadow:
+    0 16px 48px #0007,
+    inset 0 1px 0 #a4d6ff17;
+}
+.app-select-menu [aria-selected="true"] {
+  color: var(--color-accent);
+}
+.app-select-menu [data-active="true"] {
+  background: #7bc8d51c;
+}
+.app-badge {
+  letter-spacing: 0.02em;
+}
+.state-block > div {
+  box-shadow: inset 0 1px 0 #b5e3ff0b;
+}
+.account-gate {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(130deg, #15273c, #0c1828);
+}
+.game-preview > header {
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--color-divider);
+  color: #9cb7d3;
+}
+.game-canvas canvas {
+  border-radius: 0.25rem;
+}
+.game-tabs {
+  background: linear-gradient(120deg, #112237, #0c1728);
+}
+.game-tab {
+  color: #aebfd6;
+}
+.game-tab:not(.game-tab--active):hover {
+  color: #eff8ff;
+  background: #74d8e30d;
+}
+.game-tab--active {
+  position: relative;
+  background: linear-gradient(130deg, #24443f, #18313d);
+  color: var(--color-accent);
+  box-shadow:
+    inset 0 0 0 1px #8dffa63b,
+    0 0 16px #8dffa60a;
+}
+.game-tab--active::after {
+  position: absolute;
+  right: 25%;
+  bottom: 0;
+  left: 25%;
+  height: 2px;
+  border-radius: 2px;
+  background: #8dffa6;
+  box-shadow: 0 0 10px #8dffa655;
+  content: "";
+}
+.game-actions {
+  border-top-color: #456b7477;
+  background: linear-gradient(130deg, #142b36, #0d1b2d);
+  box-shadow: 0 -8px 24px #0002;
+}
+.game-actions .account-gate {
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.code-block {
+  background: linear-gradient(135deg, #08121f, #0c1a2a);
+  border-color: #2b435d;
+}
+details > summary {
+  border-radius: 0.4rem;
+  transition: color 160ms;
+}
+details > summary:hover,
+details[open] > summary {
+  color: var(--color-accent);
+}
+.rankings-tabs {
+  background: #0c1828;
+  scrollbar-width: thin;
+}
+.rankings-tabs [aria-selected="true"] {
+  background: linear-gradient(115deg, #80ffc1, #a0ff8b);
+  box-shadow: 0 0 16px #85ff9f26;
+}
+.podium-card {
+  border-color: color-mix(in srgb, var(--panel-accent) 42%, #24394f);
+  background:
+    radial-gradient(
+      ellipse at 0 0,
+      color-mix(in srgb, var(--panel-accent) 13%, transparent),
+      transparent 75%
+    ),
+    linear-gradient(140deg, #14243a, #0d1829);
+}
+.podium-card > .figure {
+  color: var(--panel-accent);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--panel-accent) 20%, transparent);
+}
+.leaderboard-table thead {
+  background: #1c334b80;
+  color: #9db4d1;
+}
+.leaderboard-table tbody tr {
+  transition: background-color 160ms;
+}
+.leaderboard-table tbody tr:hover {
+  background-color: #63bad10d;
+}
+.replay-file-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1.2rem;
+  padding: 0.4rem;
+  border: 1px solid #64cfc24d;
+  border-radius: 0.75rem;
+  background: #7de5d10d;
+  color: #83edca;
+  filter: drop-shadow(0 0 10px #83edca12);
+}
+.auth-layout {
+  background: var(--color-background);
+}
+.auth-brand {
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, #080f1a55, #080f1a00 35%, #080f1ae8 90%),
+    url("/images/lobby-arena.webp") 55% center / auto 100% no-repeat,
+    #080f1a;
+}
+.auth-brand::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(90deg, #080f1a22, transparent 60%, #080f1a77);
+  content: "";
+}
+.auth-brand-copy {
+  margin-top: auto;
+  padding-block: 3rem 1rem;
+}
+.auth-brand-copy span {
+  color: #8dffa6;
+  text-shadow: 0 0 32px #8dffa62b;
+}
+.auth-form-panel {
+  background:
+    radial-gradient(ellipse at 100% 0, #17405855, transparent 70%),
+    linear-gradient(145deg, #101d30, #080f1a);
+}
+.auth-form {
+  padding: 2rem;
+  border: 1px solid #36566b;
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #14263bcc, #0d192cdd);
+  box-shadow:
+    inset 0 1px 0 #bcffff13,
+    0 20px 60px #0004,
+    0 0 70px #71dfb707;
+}
+.auth-form h1 {
+  margin-bottom: 0.25rem;
+  color: #eff8ff;
+}
+@media (max-width: 767px) {
+  .site-header-inner {
+    min-height: 3.75rem;
+  }
+  .auth-form {
+    padding: 1.5rem;
+  }
+  .page-header {
+    padding-bottom: 1rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .site-nav-link[aria-current="page"] {
+    background: #8dffa60d;
+  }
+  .site-nav-link[aria-current="page"]::after {
+    right: auto;
+    top: 25%;
+    bottom: 25%;
+    left: 0;
+    width: 2px;
+    height: auto;
+  }
+}

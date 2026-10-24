@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
       aria-haspopup="listbox"
       :aria-controls="open ? listboxId : undefined"
       :disabled="disabled"
-      class="flex w-full min-w-0 items-center gap-2 border border-line-strong bg-subtle text-left text-ink transition hover:border-faint focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60"
+      class="app-select-trigger flex w-full min-w-0 items-center gap-2 border border-line-strong bg-subtle text-left text-ink transition hover:border-faint focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60"
       :class="
         size === 'sm'
           ? 'min-h-10 rounded-[0.5rem] px-2.5 text-[13px]'
@@ -210,7 +210,7 @@ onBeforeUnmount(() => {
         :aria-label="label"
         :aria-activedescendant="activeOptionId"
         tabindex="-1"
-        class="absolute left-0 z-50 max-h-60 w-full min-w-32 overflow-auto rounded-panel border border-line-strong bg-subtle p-1 shadow-pop focus:outline-none"
+        class="app-select-menu absolute left-0 z-50 max-h-60 w-full min-w-32 overflow-auto rounded-panel border border-line-strong bg-subtle p-1 shadow-pop focus:outline-none"
         :class="dropUp ? 'bottom-full mb-1' : 'top-full mt-1'"
         @keydown="onListKeydown"
       >

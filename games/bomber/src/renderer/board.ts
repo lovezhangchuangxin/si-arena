@@ -102,6 +102,13 @@ export function drawBomberBoard(
   context.globalAlpha = 1;
   context.fillStyle = BOMBER_PALETTE.ground;
   context.fillRect(0, 0, width, height);
+  const surface = context.createLinearGradient(0, 0, width, height);
+  surface.addColorStop(0, "#12273b99");
+  surface.addColorStop(0.5, "#07101b00");
+  surface.addColorStop(1, "#17263f66");
+  context.fillStyle = surface;
+  context.fillRect(0, 0, width, height);
+
   for (let index = 0; index < state.cells.length; index++) {
     const cell = state.cells[index]!;
     if (cell === 0) continue;
@@ -109,6 +116,25 @@ export function drawBomberBoard(
     if (cell === CELL_PILLAR) {
       context.fillStyle = BOMBER_PALETTE.pillar;
       context.fillRect(x, y, cellWidth, cellHeight);
+      const metal = context.createLinearGradient(x, y, x + cellWidth, y + cellHeight);
+      metal.addColorStop(0, "#9CC9E8");
+      metal.addColorStop(0.3, "#38546F");
+      metal.addColorStop(1, "#14263E");
+      context.fillStyle = metal;
+      context.fillRect(
+        x + cellWidth * 0.08,
+        y + cellHeight * 0.08,
+        cellWidth * 0.84,
+        cellHeight * 0.84,
+      );
+      context.strokeStyle = "#92BEDB88";
+      context.lineWidth = Math.max(0.5, span * 0.04);
+      context.strokeRect(
+        x + cellWidth * 0.2,
+        y + cellHeight * 0.2,
+        cellWidth * 0.6,
+        cellHeight * 0.6,
+      );
     } else if (cell === CELL_WALL) {
       context.fillStyle = BOMBER_PALETTE.wall;
       context.fillRect(x, y, cellWidth, cellHeight);
@@ -119,6 +145,20 @@ export function drawBomberBoard(
         cellWidth * 0.6,
         cellHeight * 0.6,
       );
+      context.strokeStyle = "#E4B77B";
+      context.lineWidth = Math.max(0.7, span * 0.06);
+      context.strokeRect(
+        x + cellWidth * 0.1,
+        y + cellHeight * 0.1,
+        cellWidth * 0.8,
+        cellHeight * 0.8,
+      );
+      context.beginPath();
+      context.moveTo(x + cellWidth * 0.18, y + cellHeight * 0.18);
+      context.lineTo(x + cellWidth * 0.82, y + cellHeight * 0.82);
+      context.moveTo(x + cellWidth * 0.82, y + cellHeight * 0.18);
+      context.lineTo(x + cellWidth * 0.18, y + cellHeight * 0.82);
+      context.stroke();
     } else if (cell === CELL_COLLAPSED) {
       context.fillStyle = BOMBER_PALETTE.collapsed;
       context.fillRect(x, y, cellWidth, cellHeight);
@@ -149,6 +189,8 @@ export function drawBomberBoard(
       for (const index of event.cells) {
         const { x, y } = origin(index);
         context.globalAlpha = markAlpha;
+        context.shadowColor = BOMBER_PALETTE.flame;
+        context.shadowBlur = Math.min(22, span * 1.1);
         context.fillStyle = BOMBER_PALETTE.flame;
         context.fillRect(x, y, cellWidth, cellHeight);
         context.fillStyle = BOMBER_PALETTE.flameCore;
@@ -162,12 +204,21 @@ export function drawBomberBoard(
     }
     context.globalAlpha = 1;
   }
+  context.shadowBlur = 0;
   for (const item of state.powerups) {
     const x = item.position.x * cellWidth,
       y = item.position.y * cellHeight;
     context.fillStyle =
       item.kind === "fire" ? BOMBER_PALETTE.powerupFire : BOMBER_PALETTE.powerupBomb;
     context.fillRect(x + cellWidth * 0.2, y + cellHeight * 0.2, cellWidth * 0.6, cellHeight * 0.6);
+    context.strokeStyle = "#E7FFFA";
+    context.lineWidth = Math.max(0.7, span * 0.04);
+    context.strokeRect(
+      x + cellWidth * 0.17,
+      y + cellHeight * 0.17,
+      cellWidth * 0.66,
+      cellHeight * 0.66,
+    );
     label(
       context,
       item.kind === "fire" ? "F" : "B",
@@ -181,10 +232,15 @@ export function drawBomberBoard(
       x: (bomb.position.x + 0.5) * cellWidth,
       y: (bomb.position.y + 0.5) * cellHeight,
     };
+    context.shadowColor = BOMBER_PALETTE.fuseRing;
+    context.shadowBlur = Math.min(12, span * 0.6);
     context.fillStyle = BOMBER_PALETTE.bomb;
     context.beginPath();
     context.arc(center.x, center.y, span * 0.34, 0, Math.PI * 2);
     context.fill();
+    context.shadowBlur = 0;
+    context.fillStyle = "#6486B2";
+    context.fillRect(center.x - span * 0.18, center.y - span * 0.2, span * 0.12, span * 0.08);
     context.strokeStyle = BOMBER_PALETTE.bombRing;
     context.lineWidth = Math.max(1, span * 0.05);
     context.beginPath();
@@ -208,6 +264,8 @@ export function drawBomberBoard(
       y = gridY * cellHeight;
     headPoints.set(player.id, { x, y });
     const center = { x: x + cellWidth / 2, y: y + cellHeight / 2 };
+    context.shadowColor = BOMBER_PALETTE.players[player.slot]!;
+    context.shadowBlur = Math.min(18, span);
     context.fillStyle = BOMBER_PALETTE.players[player.slot]!;
     context.beginPath();
     context.arc(center.x, center.y, span * 0.4, 0, Math.PI * 2);
@@ -217,7 +275,10 @@ export function drawBomberBoard(
     context.beginPath();
     context.arc(center.x, center.y, span * 0.4, 0, Math.PI * 2);
     context.stroke();
-    label(context, String(player.slot + 1), center, cellHeight * 0.55, BOMBER_PALETTE.ground);
+    context.shadowBlur = 0;
+    context.fillStyle = "#041426";
+    context.fillRect(center.x - span * 0.26, center.y - span * 0.18, span * 0.52, span * 0.36);
+    label(context, String(player.slot + 1), center, cellHeight * 0.48, "#F1FAFF");
   }
   if (showMarks) {
     for (const event of events) {
@@ -249,5 +310,9 @@ export function drawBomberBoard(
     }
   }
   context.globalAlpha = 1;
+  context.shadowBlur = 0;
+  context.strokeStyle = "#62b4d755";
+  context.lineWidth = 1;
+  context.strokeRect(0.5, 0.5, width - 1, height - 1);
   context.restore();
 }

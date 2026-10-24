@@ -71,7 +71,7 @@ onUnmounted(() => current?.abort());
       <div class="flex flex-wrap items-start gap-6">
         <section class="card flex min-w-0 flex-[1_1_17.5rem] flex-col gap-4 p-6">
           <span
-            class="grid size-16 place-items-center rounded-card bg-player-0 font-display text-[30px] font-bold text-on-accent"
+            class="user-avatar grid size-16 place-items-center rounded-card bg-player-0 font-display text-[30px] font-bold text-on-accent"
             aria-hidden="true"
             >{{ initial }}</span
           >

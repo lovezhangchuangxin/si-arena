@@ -17,7 +17,7 @@ const selected = computed(
 
 <template>
   <div class="mx-auto flex max-w-[67.5rem] flex-col gap-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
+    <header class="page-header flex flex-wrap items-end justify-between gap-4">
       <div class="flex min-w-0 flex-col gap-1.5">
         <h1 class="text-[30px] font-black sm:text-[34px]">排行榜</h1>
         <p v-if="selected" class="max-w-2xl text-[15px] leading-7 text-soft">
@@ -28,7 +28,7 @@ const selected = computed(
         v-if="games.length > 1"
         role="tablist"
         aria-label="玩法"
-        class="flex gap-1 rounded-panel border border-line bg-surface p-1"
+        class="rankings-tabs flex w-full min-w-0 max-w-full gap-1 overflow-x-auto rounded-panel border border-line bg-surface p-1"
         @keydown="moveTabFocus"
       >
         <RouterLink
@@ -40,7 +40,7 @@ const selected = computed(
           aria-controls="rankings-panel"
           :tabindex="game.id === selected?.id ? 0 : -1"
           :to="{ query: { game: game.id } }"
-          class="flex min-h-11 items-center rounded-[0.5625rem] px-[1.125rem] text-[15px] font-bold transition"
+          class="flex min-h-11 shrink-0 items-center rounded-[0.5625rem] px-[1.125rem] text-[15px] font-bold transition"
           :class="
             game.id === selected?.id ? 'bg-accent text-on-accent' : 'text-ink hover:bg-subtle'
           "

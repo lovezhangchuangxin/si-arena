@@ -22,19 +22,6 @@ const next = computed(() => safeNextPath(route.query.next));
 const register = computed(() => props.mode === "register");
 let current: AbortController | undefined;
 
-// Decorative board: two territories, their trails and heads.
-const mosaic = Array.from({ length: 160 }, (_, index) => {
-  const x = index % 16,
-    y = Math.floor(index / 16);
-  if (x === 11 && y === 3) return "var(--color-player-0)";
-  if (x === 9 && y === 9) return "var(--color-player-1)";
-  if (y === 3 && x >= 6 && x <= 11) return "rgb(91 140 255 / 0.85)";
-  if (x === 9 && y >= 6 && y <= 8) return "rgb(255 176 32 / 0.85)";
-  if (x > 9 && y > 3) return "rgb(255 176 32 / 0.38)";
-  if (x < 6 && y < 6) return "rgb(91 140 255 / 0.38)";
-  return "#141922";
-});
-
 watch(
   () => props.mode,
   () => {
@@ -83,32 +70,26 @@ onUnmounted(() => current?.abort());
 </script>
 
 <template>
-  <div class="flex min-h-dvh w-full flex-wrap">
+  <div class="auth-layout flex min-h-dvh w-full flex-wrap">
     <section
-      class="grid-backdrop relative hidden min-h-[22.5rem] flex-[1_1_32.5rem] flex-col justify-between overflow-hidden p-10 lg:flex"
+      class="auth-brand grid-backdrop relative hidden min-h-[22.5rem] flex-[1_1_32.5rem] flex-col justify-between overflow-hidden p-10 lg:flex"
     >
       <RouterLink to="/" class="w-fit rounded-control text-ink" aria-label="SI Arena 首页"
         ><AppLogo
       /></RouterLink>
-      <div class="grid grid-cols-[repeat(16,1.75rem)] gap-[3px] self-center" aria-hidden="true">
-        <span
-          v-for="(color, index) in mosaic"
-          :key="index"
-          class="size-7 rounded-[0.25rem]"
-          :style="{ backgroundColor: color }"
-        ></span>
+      <div class="auth-brand-copy">
+        <p class="text-[clamp(1.75rem,3vw,3rem)] leading-[1.4] font-black">
+          写代码的是 AI，<br />站上棋盘的是<span>你的名字。</span>
+        </p>
       </div>
-      <p class="max-w-[26rem] text-[22px] leading-[1.6] font-bold">
-        写代码的是 AI，<br />站上棋盘的是你的名字。
-      </p>
     </section>
     <div
-      class="flex flex-[1_1_30rem] flex-col items-center justify-center gap-10 bg-surface px-6 py-12 lg:border-l lg:border-line"
+      class="auth-form-panel flex flex-[1_1_30rem] flex-col items-center justify-center gap-10 bg-surface px-6 py-12 lg:border-l lg:border-line"
     >
       <RouterLink to="/" class="rounded-control text-ink lg:hidden" aria-label="SI Arena 首页"
         ><AppLogo
       /></RouterLink>
-      <form class="flex w-full max-w-[23.75rem] flex-col gap-5" @submit.prevent="submit">
+      <form class="auth-form flex w-full max-w-[26rem] flex-col gap-5" @submit.prevent="submit">
         <h1 class="text-[32px] font-black">{{ register ? "创建账号" : "登录" }}</h1>
         <AppField
           v-slot="{ describedBy }"

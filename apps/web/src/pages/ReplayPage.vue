@@ -99,7 +99,7 @@ onBeforeUnmount(() => loading?.abort());
         />
         <label
           for="replay-file"
-          class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-control border border-line-strong px-[1.125rem] text-sm font-medium text-ink transition hover:border-faint hover:bg-subtle peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"
+          class="app-button app-button--secondary inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-control border border-line-strong px-[1.125rem] text-sm font-medium text-ink transition hover:border-faint hover:bg-subtle peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"
         >
           <svg
             class="size-4"
@@ -131,7 +131,11 @@ onBeforeUnmount(() => loading?.abort());
       @retry="reselectFile"
     />
     <ReplayViewer v-else-if="session" :key="session.replay.matchId" :session="session" />
-    <div v-else class="card p-8">
+    <div v-else class="replay-empty card p-6 sm:p-8">
+      <svg class="replay-file-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <path d="M13 5h15l9 9v29H13zM28 5v10h9" stroke="currentColor" stroke-width="2" />
+        <path d="m21 22 9 6-9 6z" fill="currentColor" />
+      </svg>
       <p class="font-bold text-ink">打开 .json.gz 回放文件</p>
       <p class="mt-1.5 text-sm leading-6 text-soft">文件仅在浏览器中读取和校验。</p>
       <p class="mt-6 text-sm text-soft">还没有回放？在项目根目录运行：</p>

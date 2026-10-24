@@ -12,7 +12,7 @@ defineEmits<{ retry: [] }>();
 </script>
 
 <template>
-  <div>
+  <div class="state-block">
     <div
       v-if="status === 'loading'"
       role="status"
@@ -38,7 +38,7 @@ defineEmits<{ retry: [] }>();
       <p class="text-sm leading-6 text-danger-ink">{{ message || "加载失败，请重试。" }}</p>
       <button
         type="button"
-        class="touch-target mt-4 inline-flex min-h-10 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition hover:border-faint"
+        class="app-button app-button--secondary touch-target mt-4 inline-flex min-h-10 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition hover:border-faint"
         @click="$emit('retry')"
       >
         {{ actionLabel }}

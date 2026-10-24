@@ -1,24 +1,43 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { RouterLink } from "vue-router";
 import { parseHistory, parseLeaderboard } from "../api/contracts";
 import { session } from "../auth/session";
 import { useApiResource } from "../composables/useApiResource";
 import { duelGames, useCatalog } from "../games/catalog";
 import { isSoloGame } from "@si-arena/protocol";
-import ArenaModeCard from "../components/lobby/ArenaModeCard.vue";
-import DuelModeCard from "../components/lobby/DuelModeCard.vue";
-import SoloModeCard from "../components/lobby/SoloModeCard.vue";
-import GamePreview from "../components/GamePreview.vue";
+import LobbyGameCard from "../components/lobby/LobbyGameCard.vue";
+import LobbyIcon from "../components/lobby/LobbyIcon.vue";
 import MatchList from "../components/MatchList.vue";
 import AppButton from "../components/ui/AppButton.vue";
 import StateBlock from "../components/ui/StateBlock.vue";
 
 const catalog = useCatalog();
 const games = computed(() => catalog.data.value?.games ?? []);
-// The hero and the ranking tiles follow the first head-to-head game, the mode grid lists them all.
+// Secondary ranking and history panels follow the first head-to-head game.
 const duel = computed(() => duelGames(games.value)[0]);
-const featured = computed(() => duel.value ?? games.value[0]);
+const query = ref("");
+const mode = ref("all");
+const modes = [
+  { id: "all", label: "全部游戏", icon: "grid" },
+  { id: "duel", label: "双人对抗", icon: "duel" },
+  { id: "arena", label: "多人竞技场", icon: "arena" },
+  { id: "solo", label: "单人挑战", icon: "chart" },
+] as const;
+const filtered = computed(() => {
+  const term = query.value.trim().toLocaleLowerCase();
+  return games.value.filter((game) => {
+    const gameMode = game.arena ? "arena" : isSoloGame(game) ? "solo" : "duel";
+    return (
+      (mode.value === "all" || mode.value === gameMode) &&
+      `${game.id} ${game.name} ${game.description}`.toLocaleLowerCase().includes(term)
+    );
+  });
+});
+function resetFilters() {
+  query.value = "";
+  mode.value = "all";
+}
 const duelApi = computed(() =>
   duel.value ? `/api/games/${encodeURIComponent(duel.value.id)}` : null,
 );
@@ -35,52 +54,49 @@ const recent = useApiResource(
 </script>
 
 <template>
-  <div class="flex flex-col gap-10 pt-4 pb-6 sm:pt-6">
-    <section class="flex flex-wrap items-center gap-10">
-      <div class="flex min-w-0 flex-[999_1_32rem] flex-col gap-5">
-        <p class="eyebrow">SUPER INTELLIGENCE ARENA</p>
-        <h1 class="text-[40px] leading-[1.15] font-black sm:text-[52px]">
-          让 AI 写的代码<br />替你上场
-        </h1>
-        <p class="max-w-[35rem] text-[17px] leading-[1.7] text-soft">
-          在本地用任意 AI 编写 JavaScript 选手，上传后主动匹配。比赛在服务器上完整跑完，每一 tick
-          的动作、错误和 CPU 都能在回放里查到。
-        </p>
-        <div class="flex flex-wrap gap-3 pt-2">
-          <AppButton
-            v-if="featured"
-            variant="primary"
-            size="lg"
-            class="text-base"
-            :to="`/games/${encodeURIComponent(featured.id)}`"
-          >
-            进入{{ featured.name }}
-            <svg
-              class="size-[18px]"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </AppButton>
-          <AppButton size="lg" class="text-base" href="#modes-title">全部玩法</AppButton>
+  <div class="lobby">
+    <section class="lobby-hero" aria-labelledby="lobby-title">
+      <div class="lobby-hero-art" aria-hidden="true"></div>
+      <div class="lobby-hero-copy">
+        <h1 id="lobby-title">下一场，交给你的<span>代码。</span></h1>
+        <p class="lobby-intro">用 AI 编写策略，上传你的选手，在对战与回放中不断进步。</p>
+        <div class="lobby-features">
+          <div>
+            <i><LobbyIcon name="bolt" /></i><span><b>多种游戏环境</b></span>
+          </div>
+          <div>
+            <i><LobbyIcon name="duel" /></i><span><b>策略同场竞技</b></span>
+          </div>
+          <div>
+            <i><LobbyIcon name="chart" /></i><span><b>独立游戏榜单</b></span>
+          </div>
+          <div>
+            <i><LobbyIcon name="replay" /></i><span><b>完整对局回放</b></span>
+          </div>
         </div>
       </div>
-      <GamePreview
-        v-if="featured"
-        class="min-w-0 flex-[1_1_22.5rem]"
-        :game="featured"
-        :fit="false"
-      />
     </section>
 
-    <section aria-labelledby="modes-title" class="flex flex-col gap-4">
-      <h2 id="modes-title" class="text-xl font-bold">玩法</h2>
+    <section class="lobby-directory" aria-labelledby="modes-title">
+      <h2 id="modes-title" class="sr-only">全部游戏与玩法</h2>
+      <div class="lobby-toolbar">
+        <div class="lobby-filters" role="group" aria-label="按参赛模式筛选">
+          <button
+            v-for="item in modes"
+            :key="item.id"
+            type="button"
+            :aria-pressed="mode === item.id"
+            :class="{ 'is-active': mode === item.id }"
+            @click="mode = item.id"
+          >
+            <LobbyIcon :name="item.icon" />{{ item.label }}
+          </button>
+        </div>
+        <label class="lobby-search">
+          <LobbyIcon name="search" /><span class="sr-only">搜索游戏</span>
+          <input v-model="query" type="search" placeholder="搜索游戏、玩法或关键词…" />
+        </label>
+      </div>
       <StateBlock v-if="catalog.status.value === 'loading'" status="loading" />
       <StateBlock
         v-else-if="catalog.status.value === 'error'"
@@ -89,13 +105,16 @@ const recent = useApiResource(
         @retry="catalog.reload"
       />
       <StateBlock v-else-if="!games.length" status="empty" message="暂时还没有可玩的游戏。" />
-      <div v-else class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-5">
-        <template v-for="game in games" :key="game.id">
-          <ArenaModeCard v-if="game.arena" :game="game" />
-          <SoloModeCard v-else-if="isSoloGame(game)" :game="game" />
-          <DuelModeCard v-else :game="game" />
-        </template>
+      <div v-else-if="!filtered.length" class="lobby-empty" role="status">
+        <p>没有找到匹配的游戏，试试其他关键词或参赛模式。</p>
+        <AppButton @click="resetFilters">重置筛选</AppButton>
       </div>
+      <div v-else class="lobby-game-grid">
+        <LobbyGameCard v-for="game in filtered" :key="game.id" :game="game" />
+      </div>
+      <p v-if="catalog.status.value === 'ready'" class="sr-only" role="status" aria-live="polite">
+        共 {{ filtered.length }} 款符合条件的游戏
+      </p>
     </section>
 
     <section v-if="duel" class="flex flex-wrap gap-5">

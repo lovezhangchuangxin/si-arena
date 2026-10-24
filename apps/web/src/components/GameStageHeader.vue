@@ -6,7 +6,7 @@ defineProps<{ game: GameCatalogEntry; title: string }>();
 </script>
 
 <template>
-  <header class="flex shrink-0 flex-wrap items-center justify-between gap-3">
+  <header class="game-stage-header flex shrink-0 flex-wrap items-center justify-between gap-3">
     <div class="flex min-w-0 flex-col gap-2">
       <p class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-faint">
         <span class="rounded-chip border border-line-strong px-1.5 py-0.5 text-soft">{{
