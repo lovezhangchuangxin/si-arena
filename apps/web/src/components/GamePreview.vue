@@ -3,6 +3,7 @@ import type { GameCatalogEntry } from "@si-arena/protocol";
 import { computed } from "vue";
 import { gamePreviews } from "../games/previews";
 import GameCanvas from "./GameCanvas.vue";
+import CubeStage from "./cube/CubeStage.vue";
 
 const props = withDefaults(defineProps<{ game: GameCatalogEntry; fit?: boolean }>(), {
   fit: true,
@@ -23,8 +24,15 @@ const preview = computed(() => {
     >
       <span>初始画面</span><span>{{ game.minPlayers }} 人 · {{ game.maxTicks }} tick</span>
     </header>
+    <CubeStage
+      v-if="preview.scene && 'scene' in preview.scene"
+      :scene="preview.scene.scene"
+      :aspect-ratio="preview.scene.aspectRatio"
+      :label="`${game.name}静态初始画面`"
+      class="shrink-0"
+    />
     <GameCanvas
-      v-if="preview.scene"
+      v-else-if="preview.scene"
       :aspect-ratio="preview.scene.aspectRatio"
       :draw="preview.scene.draw"
       :label="`${game.name}静态初始画面`"

@@ -98,7 +98,7 @@ test("view.draw forwards the replay frame and draw options verbatim", async () =
   const session = await loadRegisteredReplay(replay, [entry]);
   const context = {} as CanvasRenderingContext2D;
   const options = { progress: 0.25, reducedMotion: true };
-  session.view(2).draw(context, 320, 160, options);
+  session.view(2).draw?.(context, 320, 160, options);
   expect(calls).toHaveLength(1);
   const [drawContext, frame, width, height, drawOptions] = calls[0]!;
   expect(drawContext).toBe(context);

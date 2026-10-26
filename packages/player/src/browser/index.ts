@@ -24,11 +24,18 @@ export interface ReplayDrawOptions {
   /** Host-detected prefers-reduced-motion; renderers replace transient animations with static marks. */
   reducedMotion: boolean;
 }
+/** A game-defined data scene for hosts that render outside canvas; shape is owned by the game renderer. */
+export interface ReplayScene {
+  kind: string;
+}
+
 export interface ReplayView {
   completedTicks: number;
   record: DeepReadonly<Replay<unknown, unknown>["ticks"][number]> | null;
   players: readonly ReplayPlayerSummary[];
-  draw(
+  /** Present only for games that render a data scene instead of canvas drawing. */
+  scene?(motion: ReplayDrawOptions): ReplayScene;
+  draw?(
     context: CanvasRenderingContext2D,
     width: number,
     height: number,
@@ -62,18 +69,21 @@ export function defineReplayGame<
   game: GameDefinition<State, Observation, Action, Event>;
   aspectRatio: number;
   scoreUnit: string;
-  draw(
+  /** Exactly one of `draw` and `scene` renders each frame; scene games omit canvas drawing. */
+  draw?(
     context: CanvasRenderingContext2D,
     frame: ReplayFrame<State, Action, Event>,
     width: number,
     height: number,
     options: ReplayDrawOptions,
   ): void;
+  scene?(frame: ReplayFrame<State, Action, Event>, motion: ReplayDrawOptions): ReplayScene;
   summarize(state: DeepReadonly<State>): readonly ReplayPlayerSummary[];
   narrate?: ReplayNarrator<Event>;
 }): ReplayGameRegistration {
   if (!Number.isFinite(options.aspectRatio) || options.aspectRatio <= 0)
     throw new RangeError("Invalid replay aspect ratio");
+  if (!options.draw && !options.scene) throw new TypeError("Replay needs a draw or a scene");
   return {
     id: options.game.manifest.id,
     release: options.game.manifest.release,
@@ -101,8 +111,19 @@ export function defineReplayGame<
             completedTicks,
             record: frame.record,
             players: options.summarize(frame.state),
-            draw: (context, width, height, drawOptions) =>
-              options.draw(context, frame, width, height, drawOptions),
+            ...(options.scene
+              ? { scene: (motion: ReplayDrawOptions) => options.scene!(frame, motion) }
+              : {}),
+            ...(options.draw
+              ? {
+                  draw: (
+                    context: CanvasRenderingContext2D,
+                    width: number,
+                    height: number,
+                    drawOptions: ReplayDrawOptions,
+                  ) => options.draw!(context, frame, width, height, drawOptions),
+                }
+              : {}),
             observation: (id) => session.observation(completedTicks, id),
           };
         },

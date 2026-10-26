@@ -2,7 +2,9 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 import { usePlayback } from "@si-arena/player";
 import type { BrowserReplaySession } from "@si-arena/player/browser";
+import type { CubeScene } from "@si-arena/game-cube/renderer";
 import GameCanvas from "./GameCanvas.vue";
+import CubeStage from "./cube/CubeStage.vue";
 import ReplayControls from "./replay/ReplayControls.vue";
 import ReplayDiagnostics from "./replay/ReplayDiagnostics.vue";
 import ReplayHighlights from "./replay/ReplayHighlights.vue";
@@ -58,11 +60,14 @@ const state = computed(() =>
 function draw() {
   surface.value?.redraw();
 }
-function drawView(context: CanvasRenderingContext2D, width: number, height: number) {
-  view.value.draw(context, width, height, {
+function motion() {
+  return {
     progress: playback.progress.value,
     reducedMotion: reducedMotionQuery?.matches ?? false,
-  });
+  };
+}
+function drawView(context: CanvasRenderingContext2D, width: number, height: number) {
+  view.value.draw?.(context, width, height, motion());
 }
 // Seeks and source swaps redraw the settled world while paused; playing draws come from onFrame.
 watch(
@@ -133,7 +138,16 @@ function keyboard(event: KeyboardEvent) {
             >{{ state }}
           </span>
         </div>
+        <CubeStage
+          v-if="view.scene"
+          :scene="view.scene(motion()) as unknown as CubeScene"
+          :aspect-ratio="session.aspectRatio"
+          :label="canvasLabel"
+          described-by="playback-help"
+          :class="{ 'max-h-[min(72vh,52rem)]': !fit }"
+        />
         <GameCanvas
+          v-else
           ref="surface"
           described-by="playback-help"
           :class="{ 'max-h-[min(72vh,52rem)]': !fit }"
