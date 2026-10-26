@@ -14,6 +14,8 @@ import { tetrisGame } from "@si-arena/game-tetris/game";
 import { drawTetrisBoard, TETRIS_ASPECT_RATIO } from "@si-arena/game-tetris/renderer";
 import { cubeGame } from "@si-arena/game-cube/game";
 import { cubeScene, CUBE_ASPECT_RATIO } from "@si-arena/game-cube/renderer";
+import { danmakuGame } from "@si-arena/game-danmaku/game";
+import { drawDanmakuBoard, DANMAKU_ASPECT_RATIO } from "@si-arena/game-danmaku/renderer";
 
 export interface GamePreviewScene {
   aspectRatio: number;
@@ -205,6 +207,32 @@ const previewEntries: [string, GamePreviewFactory][] = [
             erroredPlayers: new Set(),
           }),
         },
+      };
+    },
+  ],
+  [
+    danmakuGame.manifest.id,
+    (game) => {
+      if (game.release !== danmakuGame.manifest.release)
+        throw new Error("未注册此游戏发行的初始画面。");
+      const state = danmakuGame.rules.init({
+        seed: 42,
+        config: danmakuGame.parseConfig(game.config),
+        players: Array.from({ length: game.maxPlayers }, (_, slot) => ({
+          id: `preview-${slot + 1}`,
+          slot,
+        })),
+      });
+      return {
+        aspectRatio: DANMAKU_ASPECT_RATIO,
+        draw: (context, width, height) =>
+          drawDanmakuBoard(context, state, width, height, {
+            previousState: state,
+            events: [],
+            progress: 1,
+            reducedMotion: true,
+            erroredPlayers: new Set(),
+          }),
       };
     },
   ],

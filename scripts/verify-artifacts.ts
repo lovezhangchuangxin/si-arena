@@ -238,6 +238,22 @@ for (let tick = 0; tick < 400 && !cubeResult; tick++) {
 if (cubeResult?.reason !== "tick-limit" || cubeResult.completedTicks !== 400 || cubeResult.players.some(p => p.rank !== 1 || p.score !== 0)) {
   throw new Error("Standalone cube run returned an unexpected result");
 }
+import { danmakuGame, DANMAKU_SDK_SOURCE, officialBotUrl as danmakuBotUrl } from "@si-arena/game-danmaku/game";
+const danmakuRegistration = defineLocalGame({game:danmakuGame,officialBotUrl:danmakuBotUrl,module:{url:import.meta.resolve("@si-arena/game-danmaku/game"),gameExport:"danmakuGame",sdkSourceExport:"DANMAKU_SDK_SOURCE"}});
+if(danmakuRegistration.manifest.id!=="danmaku"||danmakuRegistration.manifest.minPlayers!==2||danmakuRegistration.manifest.maxPlayers!==2)throw new Error("Packed danmaku registration failed");
+let danmakuState = danmakuGame.rules.init({
+  seed: 2, config: danmakuGame.manifest.config,
+  players: [{ id: "alpha", slot: 0 }, { id: "beta", slot: 1 }],
+});
+let danmakuResult = undefined as ReturnType<typeof danmakuGame.rules.step>["result"];
+for (let tick = 0; tick < 600 && !danmakuResult; tick++) {
+  const output = danmakuGame.rules.step(danmakuState, { alpha: { type: "idle" as const }, beta: { type: "idle" as const } });
+  danmakuState = output.nextState; danmakuResult = output.result;
+}
+// An idle pair never turns or fires, so the duel runs out the whole tick budget with full hp.
+if (danmakuResult?.reason !== "tick-limit" || danmakuResult.completedTicks !== 600 || danmakuResult.players.some(p => p.rank !== 1 || p.score !== 100)) {
+  throw new Error("Standalone danmaku run returned an unexpected result");
+}
 const bot = await SandboxPlayer.create({
   matchId: "artifact", playerId: "alpha", source: "let calls=0;export default ({game,Memory})=>{calls++;Memory.n=(Memory.n??0)+1;Memory.calls=calls;game.act()}",
   sdkSource: "export default (o,{submit})=>{submit({type:'idle'});return {act(){submit({type:o.fail?'invalid':'idle'})}}}",

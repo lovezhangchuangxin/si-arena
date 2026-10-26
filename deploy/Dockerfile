@@ -24,6 +24,7 @@ COPY packages/db/package.json packages/db/
 COPY games/paper/package.json games/paper/
 COPY games/royale/package.json games/royale/
 COPY games/cube/package.json games/cube/
+COPY games/danmaku/package.json games/danmaku/
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY . .

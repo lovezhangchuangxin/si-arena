@@ -36,6 +36,13 @@ import {
   cubeHighlights,
   CUBE_ASPECT_RATIO,
 } from "@si-arena/game-cube/renderer";
+import { danmakuGame } from "@si-arena/game-danmaku/game";
+import {
+  drawDanmakuBoard,
+  danmakuHighlights,
+  danmakuPlayerSummaries,
+  DANMAKU_ASPECT_RATIO,
+} from "@si-arena/game-danmaku/renderer";
 
 type ReplayGameOptions<
   State extends { tick: number },
@@ -118,6 +125,10 @@ export const replayGames = [
     }),
     summarize: cubePlayerSummaries,
     narrate: cubeHighlights,
+  }),
+  boardReplay(danmakuGame, drawDanmakuBoard, danmakuPlayerSummaries, danmakuHighlights, {
+    aspectRatio: DANMAKU_ASPECT_RATIO,
+    scoreUnit: "HP",
   }),
 ];
 

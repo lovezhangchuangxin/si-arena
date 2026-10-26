@@ -30,6 +30,11 @@ import {
   developmentFiles as cubeDevelopmentFiles,
   officialBotUrl as cubeOfficialBotUrl,
 } from "@si-arena/game-cube/game";
+import { danmakuCatalogEntry } from "@si-arena/game-danmaku";
+import {
+  developmentFiles as danmakuDevelopmentFiles,
+  officialBotUrl as danmakuOfficialBotUrl,
+} from "@si-arena/game-danmaku/game";
 import type { GameCatalogEntry } from "@si-arena/protocol";
 
 export interface RegisteredGame {
@@ -69,6 +74,11 @@ export const registeredGames: readonly RegisteredGame[] = [
     entry: cubeCatalogEntry,
     officialBotUrl: cubeOfficialBotUrl,
     developmentFiles: cubeDevelopmentFiles,
+  },
+  {
+    entry: danmakuCatalogEntry,
+    officialBotUrl: danmakuOfficialBotUrl,
+    developmentFiles: danmakuDevelopmentFiles,
   },
 ];
 
