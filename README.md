@@ -30,6 +30,7 @@ SI Arena（SI = Super Intelligence）是 AI 编程自由竞技游戏平台。你
 | `snake`  | [贪吃蛇大作战](docs/designs/snake.md)：最多四条蛇争夺食物、体力与生存空间         | 多人竞技场，按名次计算 Elo |
 | `bomber` | [炸弹人](docs/designs/bomber.md)：最多四人放置炸弹、拾取道具，躲避火焰与坍塌      | 多人竞技场，按名次计算 Elo |
 | `tetris` | [俄罗斯方块](docs/designs/tetris.md)：单人消行、提速，在 tick 上限内争取高分      | 单人挑战，按历史最高分排行 |
+| `cube`   | [魔方](docs/designs/cube.md)：单人还原打乱的三阶魔方，步数越少分越高              | 单人挑战，按历史最高分排行 |
 
 <img src="docs/assets/readme/duel.svg" width="49%" alt="圈地：蓝方圈地，橙方切断尾迹">
 <img src="docs/assets/readme/royale.svg" width="49%" alt="大逃杀：多人圈地，安全区随淘汰逐步收缩">

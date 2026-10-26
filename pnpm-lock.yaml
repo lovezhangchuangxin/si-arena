@@ -283,6 +283,9 @@ importers:
       '@si-arena/game-bomber':
         specifier: workspace:*
         version: link:games/bomber
+      '@si-arena/game-cube':
+        specifier: workspace:*
+        version: link:games/cube
       '@si-arena/game-paper':
         specifier: workspace:*
         version: link:games/paper
@@ -361,6 +364,9 @@ importers:
       '@si-arena/game-bomber':
         specifier: workspace:*
         version: link:../../games/bomber
+      '@si-arena/game-cube':
+        specifier: workspace:*
+        version: link:../../games/cube
       '@si-arena/game-paper':
         specifier: workspace:*
         version: link:../../games/paper
@@ -407,6 +413,9 @@ importers:
       '@si-arena/game-bomber':
         specifier: workspace:*
         version: link:../../games/bomber
+      '@si-arena/game-cube':
+        specifier: workspace:*
+        version: link:../../games/cube
       '@si-arena/game-paper':
         specifier: workspace:*
         version: link:../../games/paper
@@ -465,6 +474,9 @@ importers:
       '@si-arena/game-bomber':
         specifier: workspace:*
         version: link:../../games/bomber
+      '@si-arena/game-cube':
+        specifier: workspace:*
+        version: link:../../games/cube
       '@si-arena/game-paper':
         specifier: workspace:*
         version: link:../../games/paper
@@ -486,6 +498,9 @@ importers:
       '@si-arena/runner':
         specifier: workspace:*
         version: link:../../packages/runner
+      '@si-arena/sandbox':
+        specifier: workspace:*
+        version: link:../../packages/sandbox
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
@@ -498,6 +513,19 @@ importers:
         version: 8.23.1
 
   games/bomber:
+    dependencies:
+      '@si-arena/protocol':
+        specifier: workspace:*
+        version: link:../../packages/protocol
+    devDependencies:
+      '@si-arena/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@si-arena/sandbox':
+        specifier: workspace:*
+        version: link:../../packages/sandbox
+
+  games/cube:
     dependencies:
       '@si-arena/protocol':
         specifier: workspace:*

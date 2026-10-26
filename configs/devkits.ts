@@ -9,6 +9,7 @@ import * as snake from "@si-arena/game-snake/game";
 import * as bomber from "@si-arena/game-bomber/game";
 import * as tank from "@si-arena/game-tank/game";
 import * as tetris from "@si-arena/game-tetris/game";
+import * as cube from "@si-arena/game-cube/game";
 
 // Trusted build registrations: adding a game does not change the archive builder.
 export const devkitGames = [
@@ -77,5 +78,16 @@ export const devkitGames = [
     developmentFiles: tetris.developmentFiles,
     officialBotUrl: tetris.officialBotUrl,
     sdkSource: tetris.TETRIS_SDK_SOURCE,
+  },
+  {
+    game: cube.cubeGame,
+    packageName: "@si-arena/game-cube",
+    directory: "games/cube",
+    gameExport: "cubeGame",
+    sdkSourceExport: "CUBE_SDK_SOURCE",
+    sdkInputType: "CubeTickInput",
+    developmentFiles: cube.developmentFiles,
+    officialBotUrl: cube.officialBotUrl,
+    sdkSource: cube.CUBE_SDK_SOURCE,
   },
 ];
