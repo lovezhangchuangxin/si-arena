@@ -222,6 +222,22 @@ for (let tick = 0; tick < 1500 && !tetrisResult; tick++) {
 if (tetrisResult?.reason !== "top-out" || tetrisResult.completedTicks !== 1260 || tetrisResult.players.some(p => p.rank !== 1 || p.score !== 0)) {
   throw new Error("Standalone tetris run returned an unexpected result");
 }
+import { cubeGame, CUBE_SDK_SOURCE, officialBotUrl as cubeBotUrl } from "@si-arena/game-cube/game";
+const cubeRegistration = defineLocalGame({game:cubeGame,officialBotUrl:cubeBotUrl,module:{url:import.meta.resolve("@si-arena/game-cube/game"),gameExport:"cubeGame",sdkSourceExport:"CUBE_SDK_SOURCE"}});
+if(cubeRegistration.manifest.id!=="cube"||cubeRegistration.manifest.minPlayers!==1||cubeRegistration.manifest.maxPlayers!==1)throw new Error("Packed cube registration failed");
+let cubeState = cubeGame.rules.init({
+  seed: 2, config: cubeGame.manifest.config,
+  players: [{ id: "alpha", slot: 0 }],
+});
+let cubeResult = undefined as ReturnType<typeof cubeGame.rules.step>["result"];
+for (let tick = 0; tick < 400 && !cubeResult; tick++) {
+  const output = cubeGame.rules.step(cubeState, { alpha: { type: "idle" as const } });
+  cubeState = output.nextState; cubeResult = output.result;
+}
+// An idle player never turns a face, so the scramble runs out the whole tick budget.
+if (cubeResult?.reason !== "tick-limit" || cubeResult.completedTicks !== 400 || cubeResult.players.some(p => p.rank !== 1 || p.score !== 0)) {
+  throw new Error("Standalone cube run returned an unexpected result");
+}
 const bot = await SandboxPlayer.create({
   matchId: "artifact", playerId: "alpha", source: "let calls=0;export default ({game,Memory})=>{calls++;Memory.n=(Memory.n??0)+1;Memory.calls=calls;game.act()}",
   sdkSource: "export default (o,{submit})=>{submit({type:'idle'});return {act(){submit({type:o.fail?'invalid':'idle'})}}}",

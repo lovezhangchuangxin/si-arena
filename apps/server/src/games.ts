@@ -25,6 +25,11 @@ import {
   developmentFiles as tetrisDevelopmentFiles,
   officialBotUrl as tetrisOfficialBotUrl,
 } from "@si-arena/game-tetris/game";
+import { cubeCatalogEntry } from "@si-arena/game-cube";
+import {
+  developmentFiles as cubeDevelopmentFiles,
+  officialBotUrl as cubeOfficialBotUrl,
+} from "@si-arena/game-cube/game";
 import type { GameCatalogEntry } from "@si-arena/protocol";
 
 export interface RegisteredGame {
@@ -59,6 +64,11 @@ export const registeredGames: readonly RegisteredGame[] = [
     entry: tetrisCatalogEntry,
     officialBotUrl: tetrisOfficialBotUrl,
     developmentFiles: tetrisDevelopmentFiles,
+  },
+  {
+    entry: cubeCatalogEntry,
+    officialBotUrl: cubeOfficialBotUrl,
+    developmentFiles: cubeDevelopmentFiles,
   },
 ];
 

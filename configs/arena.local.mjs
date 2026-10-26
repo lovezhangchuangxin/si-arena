@@ -5,6 +5,7 @@ import * as snake from "@si-arena/game-snake/game";
 import * as bomber from "@si-arena/game-bomber/game";
 import * as tank from "@si-arena/game-tank/game";
 import * as tetris from "@si-arena/game-tetris/game";
+import * as cube from "@si-arena/game-cube/game";
 
 // Trusted repository registration. Player sources are read as text and only run in the isolated V8 sandbox.
 export default [
@@ -61,5 +62,14 @@ export default [
       sdkSourceExport: "TETRIS_SDK_SOURCE",
     },
     officialBotUrl: tetris.officialBotUrl,
+  }),
+  defineLocalGame({
+    game: cube.cubeGame,
+    module: {
+      url: import.meta.resolve("@si-arena/game-cube/game"),
+      gameExport: "cubeGame",
+      sdkSourceExport: "CUBE_SDK_SOURCE",
+    },
+    officialBotUrl: cube.officialBotUrl,
   }),
 ];

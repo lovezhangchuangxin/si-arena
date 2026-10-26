@@ -21,6 +21,7 @@ versioning:
     - "@si-arena/game-tank"
     - "@si-arena/game-tetris"
     - "@si-arena/game-bomber"
+    - "@si-arena/game-cube"
     - "@si-arena/game-royale"
     - "@si-arena/game-snake"
     - "@si-arena/db"

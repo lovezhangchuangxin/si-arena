@@ -29,6 +29,13 @@ import {
   tetrisPlayerSummaries,
   TETRIS_ASPECT_RATIO,
 } from "@si-arena/game-tetris/renderer";
+import { cubeGame } from "@si-arena/game-cube/game";
+import {
+  cubeScene,
+  cubePlayerSummaries,
+  cubeHighlights,
+  CUBE_ASPECT_RATIO,
+} from "@si-arena/game-cube/renderer";
 
 type ReplayGameOptions<
   State extends { tick: number },
@@ -95,6 +102,22 @@ export const replayGames = [
   boardReplay(tetrisGame, drawTetrisBoard, tetrisPlayerSummaries, tetrisHighlights, {
     aspectRatio: TETRIS_ASPECT_RATIO,
     scoreUnit: "分",
+  }),
+  defineReplayGame({
+    game: cubeGame,
+    aspectRatio: CUBE_ASPECT_RATIO,
+    scoreUnit: "分",
+    scene: (frame, motion) => ({
+      kind: "cube" as const,
+      ...cubeScene(frame.state, {
+        events: frame.events,
+        progress: motion.progress,
+        reducedMotion: motion.reducedMotion,
+        erroredPlayers: new Set(Object.keys(frame.record?.errors ?? {})),
+      }),
+    }),
+    summarize: cubePlayerSummaries,
+    narrate: cubeHighlights,
   }),
 ];
 
