@@ -42,8 +42,7 @@ test("the scene describes 26 blocks with their world-facing stickers", () => {
   expect(scene.cubies).toHaveLength(26);
   expect(scene.view).toBe("rotateX(-24deg) rotateY(-34deg)");
   expect(CUBE_ASPECT_RATIO).toBeGreaterThan(1);
-  // A scrambled world still shows exactly 54 stickers: 20 blocks with three
-  // or two visible sides... actually the count is fixed: corners 3, edges 2.
+  // A scrambled world still shows exactly 54 stickers: corners 3, edges 2, centres 1.
   const stickerCount = scene.cubies.reduce(
     (total, cubie) => total + cubie.colours.filter((colour) => colour !== null).length,
     0,
