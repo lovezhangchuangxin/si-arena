@@ -1,6 +1,7 @@
 {
   "name": "@si-arena/game-tetris",
   "version": "0.7.0",
+  "private": true,
   "license": "MIT",
   "author": {
     "name": "lovekeqing",
@@ -40,9 +41,6 @@
       "types": "./dist/game.d.ts",
       "import": "./dist/game.js"
     }
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "scripts": {
     "build": "tsdown --config ../../tsdown.config.ts",
