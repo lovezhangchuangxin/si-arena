@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 import { usePlayback } from "@si-arena/player";
-import type { BrowserReplaySession } from "@si-arena/player/browser";
+import type { BrowserReplaySession, ReplayScene } from "@si-arena/player/browser";
 import type { CubeScene } from "@si-arena/game-cube/renderer";
 import GameCanvas from "./GameCanvas.vue";
 import CubeStage from "./cube/CubeStage.vue";
@@ -69,6 +69,11 @@ function motion() {
 function drawView(context: CanvasRenderingContext2D, width: number, height: number) {
   view.value.draw?.(context, width, height, motion());
 }
+// DOM-scene games declare their shape by `kind`; unknown kinds fall back to the canvas path.
+const cubeScene = computed<(ReplayScene & CubeScene) | null>(() => {
+  const scene = view.value.scene?.(motion());
+  return scene?.kind === "cube" ? (scene as ReplayScene & CubeScene) : null;
+});
 // Seeks and source swaps redraw the settled world while paused; playing draws come from onFrame.
 watch(
   view,
@@ -139,8 +144,8 @@ function keyboard(event: KeyboardEvent) {
           </span>
         </div>
         <CubeStage
-          v-if="view.scene"
-          :scene="view.scene(motion()) as unknown as CubeScene"
+          v-if="cubeScene"
+          :scene="cubeScene"
           :aspect-ratio="session.aspectRatio"
           :label="canvasLabel"
           described-by="playback-help"

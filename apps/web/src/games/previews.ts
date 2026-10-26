@@ -20,7 +20,7 @@ export interface GamePreviewScene {
   draw: (context: CanvasRenderingContext2D, width: number, height: number) => void;
 }
 
-/** Scenes render outside canvas; the host dispatches on `kind` (see CubeStage). */
+/** Scenes render outside canvas; hosts render them with a DOM component (see CubeStage). */
 export interface GamePreviewDomScene {
   aspectRatio: number;
   scene: { kind: "cube" } & CubeScene;
