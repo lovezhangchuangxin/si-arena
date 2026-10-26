@@ -10,6 +10,7 @@ import * as bomber from "@si-arena/game-bomber/game";
 import * as tank from "@si-arena/game-tank/game";
 import * as tetris from "@si-arena/game-tetris/game";
 import * as cube from "@si-arena/game-cube/game";
+import * as danmaku from "@si-arena/game-danmaku/game";
 
 // Trusted build registrations: adding a game does not change the archive builder.
 export const devkitGames = [
@@ -89,5 +90,16 @@ export const devkitGames = [
     developmentFiles: cube.developmentFiles,
     officialBotUrl: cube.officialBotUrl,
     sdkSource: cube.CUBE_SDK_SOURCE,
+  },
+  {
+    game: danmaku.danmakuGame,
+    packageName: "@si-arena/game-danmaku",
+    directory: "games/danmaku",
+    gameExport: "danmakuGame",
+    sdkSourceExport: "DANMAKU_SDK_SOURCE",
+    sdkInputType: "DanmakuTickInput",
+    developmentFiles: danmaku.developmentFiles,
+    officialBotUrl: danmaku.officialBotUrl,
+    sdkSource: danmaku.DANMAKU_SDK_SOURCE,
   },
 ];

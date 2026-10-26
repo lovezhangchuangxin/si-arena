@@ -31,6 +31,7 @@
     "../../games/bomber/tests/**",
     "../../games/cube/tests/**",
     "../../games/tank/tests/**",
-    "../../games/tetris/tests/**"
+    "../../games/tetris/tests/**",
+    "../../games/danmaku/tests/**"
   ]
 }
