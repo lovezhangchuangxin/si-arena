@@ -4,8 +4,8 @@ import { DANMAKU_DIRECTIONS, DANMAKU_SHOTS, DANMAKU_SPEEDS } from "../constants"
 import { readRecord } from "./validation";
 
 /**
- * act 动作的字段校验：type/move/fire 必填（move/fire 可为 null），
- * speed 是可选的新字段（缺省 slow，不允许未知额外字段）。
+ * act 动作的字段校验：type 与 move 必填（move 可为 null），fire/speed
+ * 至少出现其一（均可省略为 null；speed 缺省 slow，不允许未知额外字段）。
  */
 function readRecordLoose(raw: object, keys: readonly string[]): boolean {
   const own = Object.keys(raw);

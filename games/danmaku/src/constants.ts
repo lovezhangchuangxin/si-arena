@@ -42,8 +42,9 @@ export const DANMAKU_DELTAS: Readonly<
 } as const);
 /**
  * 弹幕飞行的 16 个方向基准位移：慢弹每 tick 位移即此表（切比雪夫距离 2），
- * 快弹两倍（切比雪夫距离 4）；均严格快于机体满速 1 格。每轴均为偶数，
- * 逐格采样的路径恒为整点。
+ * 快弹两倍（切比雪夫距离 4）；均严格快于机体满速 1 格。部分方向含奇数轴
+ * （ENE、NNE 等），但采样公式 floor(位移×k/格数) 的结果恒为整数，
+ * 逐格采样的路径不会出现分数坐标。
  */
 export const DANMAKU_SHOTS = Object.freeze([
   "E",

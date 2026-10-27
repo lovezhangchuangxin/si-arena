@@ -22,7 +22,7 @@ export default ({ game }) => {
   const py = opponent.position.y + opponent.velocity.y;
   const dx = px - self.position.x;
   const dy = py - self.position.y;
-  // move 是加速度：持续按住 E 会加速到每 tick 2 格，hold 才能停下。
+  // move 是加速度：持续按住 E 会加速到每 tick 1 格，hold 才能停下。
   const move = dx > 1 ? "E" : dx < -1 ? "W" : dy > 1 ? "S" : dy < -1 ? "N" : "hold";
   // 按预测点在哪个象限选一个 16 向弹幕方向（示例精度有限，欢迎改进）。
   const shot =

@@ -20,7 +20,7 @@ export interface DanmakuPosition {
   y: number;
 }
 
-/** 每 tick 一个动作：移动并可同时开火，或静止。 */
+/** 每 tick 一个动作：移动并可同时开火，或交回默认动作（不再加速、保持漂移）。 */
 export type DanmakuAction =
   | { type: "idle" }
   | {

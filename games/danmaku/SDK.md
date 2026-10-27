@@ -51,7 +51,7 @@ export default function tick({ game, Memory }) {
 | `game.maxTicks` | 本局回合上限，固定 600                                                                                                |
 | `game.width`    | 战场宽度，固定 32                                                                                                     |
 | `game.height`   | 战场高度，固定 24                                                                                                     |
-| `game.self`     | 自己的 `id`、`slot`、`position: {x,y}`、`velocity: {x,y}`、`hp`（1–100），以及上述四个动作方法                        |
+| `game.self`     | 自己的 `id`、`slot`、`position: {x,y}`、`velocity: {x,y}`、`hp`（0–100），以及上述四个动作方法                        |
 | `game.opponent` | 对方的 `id`、`slot`、`position`、`velocity`、`hp`；本游戏没有中途阵亡，始终是对象                                     |
 | `game.bullets`  | 在飞弹幕数组，按发射先后排列，每项含 `serial`、`position`、`direction`、`speed`（`"slow"`/`"fast"`）、`owner`（席位） |
 | `game.events`   | 上一 tick 结算产生的公开事件，tick 0 为空数组                                                                         |
