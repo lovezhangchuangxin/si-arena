@@ -93,14 +93,17 @@ export const danmakuRules: DanmakuRules = {
     // 那一步并回退该轴速度；机体不会被卡死，下 tick 仍可重新加速。
     for (const ship of next.ships) {
       const action = actions[ship.id];
-      if (action === undefined || action.type !== "act") continue;
-      if (action.move === "hold") {
+      // idle（含执行失败时的默认动作）保持惯性：不施加加速度，
+      // 按现有速度继续漂移；只有 hold 才刹车。出错的机体顺着最后
+      // 已知速度滑行，而不是定在弹幕里。
+      const move = action !== undefined && action.type === "act" ? action.move : null;
+      if (move === "hold") {
         // 刹车：速度清零，位置不变，不发 move 事件。
         ship.velocity.x = 0;
         ship.velocity.y = 0;
         continue;
       }
-      const [ax, ay] = action.move === null ? [0, 0] : DANMAKU_DELTAS[action.move];
+      const [ax, ay] = move === null ? [0, 0] : DANMAKU_DELTAS[move];
       // 速度在施加加速度后立即更新：先加速、再按新速度走格。
       ship.velocity.x = clampVelocity(ship.velocity.x + ax);
       ship.velocity.y = clampVelocity(ship.velocity.y + ay);
