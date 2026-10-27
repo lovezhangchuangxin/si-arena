@@ -11,7 +11,7 @@
 export default function tick({ game, Memory }) {
   Memory.turns = (typeof Memory.turns === "number" ? Memory.turns : 0) + 1;
   const { self, opponent } = game;
-  // move 是加速度：持续按住会加速到每轴 ±1，松手继续漂移，hold 才能刹车。
+  // move 是加速度：持续按住会加速到每轴 ±1，松手与 idle 继续漂移，hold 才能刹车。
   const dx = opponent.position.x - self.position.x;
   const dy = opponent.position.y - self.position.y;
   const shot = dy < 0 ? "N" : dy > 0 ? "S" : dx < 0 ? "W" : "E";
@@ -33,7 +33,7 @@ export default function tick({ game, Memory }) {
 
 未调用动作方法时默认 idle。同 tick 多次调用采用最后一次，这些方法相互覆盖。它们返回 `undefined`，不立即修改位置；双方执行结束后统一结算。
 
-**移动是惯性**：`move` 输入的是本 tick 的加速度，速度每轴钳制在 ±1 并跨 tick 保留；位置按 `速度 + 加速度` 逐格位移。`null` 表示不施加加速度（继续漂移），`"hold"` 表示刹车（速度立即清零、位置不变）。撞到边界的那一步不移动、该轴速度分量回退并发一次 `blocked` 事件；机体可以与对手同格或互换位置。在飞弹幕已满 3 发时开火无效（无事件、不惩罚）。
+**移动是惯性**：`move` 输入的是本 tick 的加速度，速度每轴钳制在 ±1 并跨 tick 保留；位置按 `速度 + 加速度` 逐格位移。`null` 表示不施加加速度（继续漂移），`"hold"` 表示刹车（速度立即清零、位置不变）。`idle()` 或本 tick 执行失败时同样不施加加速度——机体按现有速度继续漂移，急停只能靠 `hold`。撞到边界的那一步不移动、该轴速度分量回退并发一次 `blocked` 事件；机体可以与对手同格或互换位置。在飞弹幕已满 3 发时开火无效（无事件、不惩罚）。
 
 方向或速度参数错误会产生 `INVALID_ACTION`，即使用 catch 捕获后再调用合法动作，本 tick 仍执行失败。执行异常、超时或资源超限时，也会丢弃本 tick 的动作和 Memory 修改，改用 idle，保留上次成功的 Memory，并在下一 tick 重建环境。
 
@@ -51,7 +51,7 @@ export default function tick({ game, Memory }) {
 | `game.maxTicks` | 本局回合上限，固定 600                                                                                                |
 | `game.width`    | 战场宽度，固定 32                                                                                                     |
 | `game.height`   | 战场高度，固定 24                                                                                                     |
-| `game.self`     | 自己的 `id`、`slot`、`position: {x,y}`、`velocity: {x,y}`、`hp`（1–100），以及上述四个动作方法                        |
+| `game.self`     | 自己的 `id`、`slot`、`position: {x,y}`、`velocity: {x,y}`、`hp`（0–100），以及上述四个动作方法                        |
 | `game.opponent` | 对方的 `id`、`slot`、`position`、`velocity`、`hp`；本游戏没有中途阵亡，始终是对象                                     |
 | `game.bullets`  | 在飞弹幕数组，按发射先后排列，每项含 `serial`、`position`、`direction`、`speed`（`"slow"`/`"fast"`）、`owner`（席位） |
 | `game.events`   | 上一 tick 结算产生的公开事件，tick 0 为空数组                                                                         |

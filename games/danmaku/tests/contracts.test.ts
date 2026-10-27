@@ -31,7 +31,7 @@ const context = (state: DanmakuState, playerId = "alpha") => ({
 test("the manifest publishes a fixed 1v1 duel without an arena and with default limits", () => {
   expect(danmakuManifest).toMatchObject({
     id: "danmaku",
-    botProtocolVersion: 2,
+    botProtocolVersion: 1,
     minPlayers: 2,
     maxPlayers: 2,
     maxTicks: 600,

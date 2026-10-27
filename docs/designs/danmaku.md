@@ -24,7 +24,7 @@
 
 每 tick 每架机体提交一个动作：
 
-- `{ type: "idle" }`：放弃行动。
+- `{ type: "idle" }`：放弃行动——不施加加速度，机体按现有速度继续漂移（执行失败时的默认动作同样如此）；
 - `{ type: "act", move, fire, speed }`：
   - `move` 是 8 个加速度方向 `E NE N NW W SW S SE` 之一、`hold`（刹车）或 `null`（维持漂移）；
   - `fire` 是 16 个弹幕方向 `E ENE NE NNE N NNW NW WNW W WSW SW SSW S SSE SE ESE` 之一或 `null`；

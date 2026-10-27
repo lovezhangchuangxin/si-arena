@@ -371,6 +371,52 @@ test("idle ships still take default actions and the match runs to the tick limit
   throw new Error("an idle match must end at the tick limit");
 });
 
+test("idle keeps drifting with the current velocity; only hold brakes", () => {
+  const state = world([
+    [10, 10],
+    [20, 10],
+  ]);
+  // 先加速到向东 1 格/tick。
+  const first = step(state, { 0: act("E", null), 1: idle() });
+  expect(positions(first.nextState)).toStrictEqual([
+    [11, 10],
+    [20, 10],
+  ]);
+  // 之后 idle 不再施加加速度：机体按现有速度继续漂移，而不是冻结原位。
+  const drifted = step(first.nextState, { 0: idle(), 1: idle() });
+  expect(positions(drifted.nextState)).toStrictEqual([
+    [12, 10],
+    [20, 10],
+  ]);
+  expect(required(drifted.nextState.ships[0]).velocity).toStrictEqual({ x: 1, y: 0 });
+  // hold 才是唯一刹车：速度清零、位置不变。
+  const braked = step(drifted.nextState, { 0: act("hold", null), 1: idle() });
+  expect(positions(braked.nextState)).toStrictEqual([
+    [12, 10],
+    [20, 10],
+  ]);
+  expect(required(braked.nextState.ships[0]).velocity).toStrictEqual({ x: 0, y: 0 });
+});
+
+test("a failed tick falls back to idle and the ship keeps coasting on its last velocity", () => {
+  const state = world([
+    [10, 10],
+    [20, 10],
+  ]);
+  const up = step(state, { 0: act("N", null), 1: idle() });
+  expect(positions(up.nextState)).toStrictEqual([
+    [10, 9],
+    [20, 10],
+  ]);
+  // 执行失败 tick：规则收到默认 idle，机体沿最后速度继续滑行。
+  const failed = step(up.nextState, { 0: { type: "idle" }, 1: idle() });
+  expect(positions(failed.nextState)).toStrictEqual([
+    [10, 8],
+    [20, 10],
+  ]);
+  expect(required(failed.nextState.ships[0]).velocity).toStrictEqual({ x: 0, y: -1 });
+});
+
 test("hp zero ends the match with elimination and a full-hp survivor ranks first", () => {
   const state = world([
     [10, 12],
