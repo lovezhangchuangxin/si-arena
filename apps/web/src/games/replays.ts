@@ -43,6 +43,13 @@ import {
   danmakuPlayerSummaries,
   DANMAKU_ASPECT_RATIO,
 } from "@si-arena/game-danmaku/renderer";
+import { investmentGame } from "@si-arena/game-investment/game";
+import {
+  drawInvestmentBoard,
+  investmentHighlights,
+  investmentPlayerSummaries,
+  INVESTMENT_ASPECT_RATIO,
+} from "@si-arena/game-investment/renderer";
 
 type ReplayGameOptions<
   State extends { tick: number },
@@ -81,6 +88,36 @@ function boardReplay<State extends { tick: number }, Observation, Action extends
     draw: (context, frame, width, height, motion) =>
       draw(context, frame.state, width, height, {
         previousState: frame.previousState,
+        events: frame.events,
+        progress: motion.progress,
+        reducedMotion: motion.reducedMotion,
+        erroredPlayers: new Set(Object.keys(frame.record?.errors ?? {})),
+      }),
+    summarize,
+  });
+}
+
+/** 投资棋盘不需要 previousState，只消费事件闪烁。 */
+function marketReplay<State extends { tick: number }, Observation, Action extends JsonValue, Event>(
+  game: ReplayGameOptions<State, Observation, Action, Event>["game"],
+  draw: (
+    context: CanvasRenderingContext2D,
+    state: DeepReadonly<State>,
+    width: number,
+    height: number,
+    animation: Omit<BoardAnimation<State, Event>, "previousState">,
+  ) => void,
+  summarize: (state: DeepReadonly<State>) => readonly ReplayPlayerSummary[],
+  narrate?: ReplayGameOptions<State, Observation, Action, Event>["narrate"],
+  options: { aspectRatio?: number; scoreUnit?: string } = {},
+) {
+  return defineReplayGame({
+    game,
+    ...(narrate ? { narrate } : {}),
+    aspectRatio: options.aspectRatio ?? 1,
+    scoreUnit: options.scoreUnit ?? "格",
+    draw: (context, frame, width, height, motion) =>
+      draw(context, frame.state, width, height, {
         events: frame.events,
         progress: motion.progress,
         reducedMotion: motion.reducedMotion,
@@ -130,6 +167,13 @@ export const replayGames = [
     aspectRatio: DANMAKU_ASPECT_RATIO,
     scoreUnit: "HP",
   }),
+  marketReplay(
+    investmentGame,
+    drawInvestmentBoard,
+    investmentPlayerSummaries,
+    investmentHighlights,
+    { aspectRatio: INVESTMENT_ASPECT_RATIO, scoreUnit: "元" },
+  ),
 ];
 
 /** Whether this web build can verify and draw replays of the given release. */

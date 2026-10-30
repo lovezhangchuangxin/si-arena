@@ -1,0 +1,9 @@
+{
+  "extends": "../../configs/typescript/base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"]
+}

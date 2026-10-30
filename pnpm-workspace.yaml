@@ -25,6 +25,7 @@ versioning:
     - "@si-arena/game-royale"
     - "@si-arena/game-snake"
     - "@si-arena/game-danmaku"
+    - "@si-arena/game-investment"
     - "@si-arena/db"
     - "@si-arena/server"
     - "@si-arena/worker"

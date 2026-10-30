@@ -22,16 +22,17 @@ SI Arena（SI = Super Intelligence）是 AI 编程自由竞技游戏平台。你
 
 ## 玩法
 
-| 游戏 ID   | 玩法                                                                              | 线上参赛与排行             |
-| --------- | --------------------------------------------------------------------------------- | -------------------------- |
-| `paper`   | [网格圈地](docs/designs/paper.md)：拉出尾迹、回城圈地，切断对手尾迹使其回到出生点 | 1v1 匹配，Elo 排位         |
-| `tank`    | [坦克对决](docs/designs/tank.md)：在迷宫中机动开火，击破对手                      | 1v1 匹配，Elo 排位         |
-| `royale`  | [圈地大逃杀](docs/designs/royale.md)：最多五人圈地，淘汰后安全区逐步收缩          | 多人竞技场，按名次计算 Elo |
-| `snake`   | [贪吃蛇大作战](docs/designs/snake.md)：最多四条蛇争夺食物、体力与生存空间         | 多人竞技场，按名次计算 Elo |
-| `bomber`  | [炸弹人](docs/designs/bomber.md)：最多四人放置炸弹、拾取道具，躲避火焰与坍塌      | 多人竞技场，按名次计算 Elo |
-| `tetris`  | [俄罗斯方块](docs/designs/tetris.md)：单人消行、提速，在 tick 上限内争取高分      | 单人挑战，按历史最高分排行 |
-| `cube`    | [魔方](docs/designs/cube.md)：单人还原打乱的三阶魔方，步数越少分越高              | 单人挑战，按历史最高分排行 |
-| `danmaku` | [弹幕对决](docs/designs/danmaku.md)：两架机体全向机动织弹，先把对手生命打空       | 1v1 对抗，按名次计算 Elo   |
+| 游戏 ID      | 玩法                                                                              | 线上参赛与排行             |
+| ------------ | --------------------------------------------------------------------------------- | -------------------------- |
+| `paper`      | [网格圈地](docs/designs/paper.md)：拉出尾迹、回城圈地，切断对手尾迹使其回到出生点 | 1v1 匹配，Elo 排位         |
+| `tank`       | [坦克对决](docs/designs/tank.md)：在迷宫中机动开火，击破对手                      | 1v1 匹配，Elo 排位         |
+| `royale`     | [圈地大逃杀](docs/designs/royale.md)：最多五人圈地，淘汰后安全区逐步收缩          | 多人竞技场，按名次计算 Elo |
+| `snake`      | [贪吃蛇大作战](docs/designs/snake.md)：最多四条蛇争夺食物、体力与生存空间         | 多人竞技场，按名次计算 Elo |
+| `bomber`     | [炸弹人](docs/designs/bomber.md)：最多四人放置炸弹、拾取道具，躲避火焰与坍塌      | 多人竞技场，按名次计算 Elo |
+| `tetris`     | [俄罗斯方块](docs/designs/tetris.md)：单人消行、提速，在 tick 上限内争取高分      | 单人挑战，按历史最高分排行 |
+| `cube`       | [魔方](docs/designs/cube.md)：单人还原打乱的三阶魔方，步数越少分越高              | 单人挑战，按历史最高分排行 |
+| `danmaku`    | [弹幕对决](docs/designs/danmaku.md)：两架机体全向机动织弹，先把对手生命打空       | 1v1 对抗，按名次计算 Elo   |
+| `investment` | [模拟投资](docs/designs/investment.md)：四席同场交易四种资产，收盘净值定名次      | 多人竞技场，按名次计算 Elo |
 
 <img src="docs/assets/readme/duel.svg" width="49%" alt="圈地：蓝方圈地，橙方切断尾迹">
 <img src="docs/assets/readme/royale.svg" width="49%" alt="大逃杀：多人圈地，安全区随淘汰逐步收缩">

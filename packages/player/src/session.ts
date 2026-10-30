@@ -36,7 +36,8 @@ export interface ReplayHighlight {
   /** Completed ticks when it happened. */
   tick: number;
   text: string;
-  tone: "danger" | "neutral";
+  /** Optional semantics for coloring; games may use only a subset. */
+  tone: "danger" | "down" | "neutral" | "up";
 }
 
 /** Trusted, game-specific wording for a tick's events; names maps player id to display name. */

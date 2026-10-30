@@ -7,6 +7,7 @@ import * as tank from "@si-arena/game-tank/game";
 import * as tetris from "@si-arena/game-tetris/game";
 import * as cube from "@si-arena/game-cube/game";
 import * as danmaku from "@si-arena/game-danmaku/game";
+import * as investment from "@si-arena/game-investment/game";
 
 // Trusted repository registration. Player sources are read as text and only run in the isolated V8 sandbox.
 export default [
@@ -81,5 +82,14 @@ export default [
       sdkSourceExport: "DANMAKU_SDK_SOURCE",
     },
     officialBotUrl: danmaku.officialBotUrl,
+  }),
+  defineLocalGame({
+    game: investment.investmentGame,
+    module: {
+      url: import.meta.resolve("@si-arena/game-investment/game"),
+      gameExport: "investmentGame",
+      sdkSourceExport: "INVESTMENT_SDK_SOURCE",
+    },
+    officialBotUrl: investment.officialBotUrl,
   }),
 ];

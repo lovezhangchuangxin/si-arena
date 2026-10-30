@@ -254,6 +254,22 @@ for (let tick = 0; tick < 600 && !danmakuResult; tick++) {
 if (danmakuResult?.reason !== "tick-limit" || danmakuResult.completedTicks !== 600 || danmakuResult.players.some(p => p.rank !== 1 || p.score !== 100)) {
   throw new Error("Standalone danmaku run returned an unexpected result");
 }
+import { investmentGame, INVESTMENT_SDK_SOURCE, officialBotUrl as investmentBotUrl } from "@si-arena/game-investment/game";
+const investmentRegistration = defineLocalGame({game:investmentGame,officialBotUrl:investmentBotUrl,module:{url:import.meta.resolve("@si-arena/game-investment/game"),gameExport:"investmentGame",sdkSourceExport:"INVESTMENT_SDK_SOURCE"}});
+if(investmentRegistration.manifest.id!=="investment"||investmentRegistration.manifest.minPlayers!==2||investmentRegistration.manifest.maxPlayers!==4)throw new Error("Packed investment registration failed");
+let investmentState = investmentGame.rules.init({
+  seed: 2, config: investmentGame.manifest.config,
+  players: [{ id: "alpha", slot: 0 }, { id: "beta", slot: 1 }],
+});
+let investmentResult = undefined as ReturnType<typeof investmentGame.rules.step>["result"];
+for (let tick = 0; tick < 240 && !investmentResult; tick++) {
+  const output = investmentGame.rules.step(investmentState, { alpha: { type: "idle" as const }, beta: { type: "idle" as const } });
+  investmentState = output.nextState; investmentResult = output.result;
+}
+// Idle traders never order, so the market runs out the whole tick budget with two co-champions.
+if (investmentResult?.reason !== "tick-limit" || investmentResult.completedTicks !== 240 || investmentResult.players.some(p => p.rank !== 1)) {
+  throw new Error("Standalone investment run returned an unexpected result");
+}
 const bot = await SandboxPlayer.create({
   matchId: "artifact", playerId: "alpha", source: "let calls=0;export default ({game,Memory})=>{calls++;Memory.n=(Memory.n??0)+1;Memory.calls=calls;game.act()}",
   sdkSource: "export default (o,{submit})=>{submit({type:'idle'});return {act(){submit({type:o.fail?'invalid':'idle'})}}}",

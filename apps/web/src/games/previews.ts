@@ -16,6 +16,8 @@ import { cubeGame } from "@si-arena/game-cube/game";
 import { cubeScene, CUBE_ASPECT_RATIO } from "@si-arena/game-cube/renderer";
 import { danmakuGame } from "@si-arena/game-danmaku/game";
 import { drawDanmakuBoard, DANMAKU_ASPECT_RATIO } from "@si-arena/game-danmaku/renderer";
+import { investmentGame } from "@si-arena/game-investment/game";
+import { drawInvestmentBoard, INVESTMENT_ASPECT_RATIO } from "@si-arena/game-investment/renderer";
 
 export interface GamePreviewScene {
   aspectRatio: number;
@@ -228,6 +230,31 @@ const previewEntries: [string, GamePreviewFactory][] = [
         draw: (context, width, height) =>
           drawDanmakuBoard(context, state, width, height, {
             previousState: state,
+            events: [],
+            progress: 1,
+            reducedMotion: true,
+            erroredPlayers: new Set(),
+          }),
+      };
+    },
+  ],
+  [
+    investmentGame.manifest.id,
+    (game) => {
+      if (game.release !== investmentGame.manifest.release)
+        throw new Error("未注册此游戏发行的初始画面。");
+      const state = investmentGame.rules.init({
+        seed: 42,
+        config: investmentGame.parseConfig(game.config),
+        players: Array.from({ length: game.maxPlayers }, (_, slot) => ({
+          id: `preview-${slot + 1}`,
+          slot,
+        })),
+      });
+      return {
+        aspectRatio: INVESTMENT_ASPECT_RATIO,
+        draw: (context, width, height) =>
+          drawInvestmentBoard(context, state, width, height, {
             events: [],
             progress: 1,
             reducedMotion: true,

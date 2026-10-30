@@ -6,6 +6,7 @@ import { tankPresentation } from "@si-arena/game-tank/renderer";
 import { tetrisPresentation } from "@si-arena/game-tetris/renderer";
 import { cubePresentation } from "@si-arena/game-cube/renderer";
 import { danmakuPresentation } from "@si-arena/game-danmaku/renderer";
+import { investmentPresentation } from "@si-arena/game-investment/renderer";
 import type { GamePresentation } from "@si-arena/player";
 
 export const gamePresentations: ReadonlyMap<string, GamePresentation> = new Map([
@@ -17,4 +18,5 @@ export const gamePresentations: ReadonlyMap<string, GamePresentation> = new Map(
   [tetrisPresentation.id, tetrisPresentation],
   [cubePresentation.id, cubePresentation],
   [danmakuPresentation.id, danmakuPresentation],
+  [investmentPresentation.id, investmentPresentation],
 ]);
