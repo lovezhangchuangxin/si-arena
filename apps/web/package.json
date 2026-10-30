@@ -17,6 +17,7 @@
     "@si-arena/game-bomber": "workspace:*",
     "@si-arena/game-cube": "workspace:*",
     "@si-arena/game-danmaku": "workspace:*",
+    "@si-arena/game-investment": "workspace:*",
     "@si-arena/game-paper": "workspace:*",
     "@si-arena/game-royale": "workspace:*",
     "@si-arena/game-snake": "workspace:*",

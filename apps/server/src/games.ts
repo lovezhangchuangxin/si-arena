@@ -35,6 +35,11 @@ import {
   developmentFiles as danmakuDevelopmentFiles,
   officialBotUrl as danmakuOfficialBotUrl,
 } from "@si-arena/game-danmaku/game";
+import { investmentCatalogEntry } from "@si-arena/game-investment";
+import {
+  developmentFiles as investmentDevelopmentFiles,
+  officialBotUrl as investmentOfficialBotUrl,
+} from "@si-arena/game-investment/game";
 import type { GameCatalogEntry } from "@si-arena/protocol";
 
 export interface RegisteredGame {
@@ -79,6 +84,11 @@ export const registeredGames: readonly RegisteredGame[] = [
     entry: danmakuCatalogEntry,
     officialBotUrl: danmakuOfficialBotUrl,
     developmentFiles: danmakuDevelopmentFiles,
+  },
+  {
+    entry: investmentCatalogEntry,
+    officialBotUrl: investmentOfficialBotUrl,
+    developmentFiles: investmentDevelopmentFiles,
   },
 ];
 

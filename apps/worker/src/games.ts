@@ -6,6 +6,7 @@ import { tankGame } from "@si-arena/game-tank/game";
 import { tetrisGame } from "@si-arena/game-tetris/game";
 import { cubeGame } from "@si-arena/game-cube/game";
 import { danmakuGame } from "@si-arena/game-danmaku/game";
+import { investmentGame } from "@si-arena/game-investment/game";
 import { defineSandboxGame, type SandboxGameRegistration } from "./sandbox-match";
 
 // New games join by registering their trusted definition here; the rest of the
@@ -73,6 +74,14 @@ const registrations: readonly SandboxGameRegistration[] = [
       url: import.meta.resolve("@si-arena/game-danmaku/game"),
       gameExport: "danmakuGame",
       sdkSourceExport: "DANMAKU_SDK_SOURCE",
+    },
+  }),
+  defineSandboxGame({
+    game: investmentGame,
+    module: {
+      url: import.meta.resolve("@si-arena/game-investment/game"),
+      gameExport: "investmentGame",
+      sdkSourceExport: "INVESTMENT_SDK_SOURCE",
     },
   }),
 ];

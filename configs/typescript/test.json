@@ -32,6 +32,7 @@
     "../../games/cube/tests/**",
     "../../games/tank/tests/**",
     "../../games/tetris/tests/**",
-    "../../games/danmaku/tests/**"
+    "../../games/danmaku/tests/**",
+    "../../games/investment/tests/**"
   ]
 }

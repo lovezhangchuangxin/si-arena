@@ -22,9 +22,15 @@ const shown = computed(() =>
           @click="emit('seek', highlight.tick)"
         >
           <span class="pt-0.5 font-mono text-xs text-faint">t {{ highlight.tick }}</span>
-          <span :class="highlight.tone === 'danger' ? 'text-danger-ink' : 'text-soft'">{{
-            highlight.text
-          }}</span>
+          <span
+            :class="{
+              'text-danger-ink': highlight.tone === 'danger',
+              'text-soft': highlight.tone === 'neutral',
+              'text-[#f87171]': highlight.tone === 'up',
+              'text-[#34d399]': highlight.tone === 'down',
+            }"
+            >{{ highlight.text }}</span
+          >
         </button>
       </li>
     </ol>
